@@ -1,0 +1,52 @@
+<section class="seat-board" aria-label="互动座位板">
+  <div class="seat-board-actions">
+    <button class="secondary" type="button" data-seat-settings>
+      <i data-lucide="sliders-horizontal"></i>布局设置
+    </button>
+    <button class="secondary seat-clear-all" type="button" data-seat-clear-all>
+      <i data-lucide="trash-2"></i>全部清空
+    </button>
+  </div>
+  <dialog class="seat-settings-dialog" data-seat-settings-dialog>
+    <div class="seat-settings-head">
+      <div><strong>教室布局设置</strong><span>修改行数、座位组和过道</span></div>
+      <button class="icon-btn" type="button" data-seat-settings-close aria-label="关闭布局设置" title="关闭">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="seat-board-size" aria-label="座位板尺寸">
+      <label>行数<input data-seat-rows type="number" min="1" max="30" inputmode="numeric" /></label>
+      <div class="seat-group-editor">
+        <span class="seat-group-label">列分组</span>
+        <div class="seat-group-list" data-seat-groups></div>
+        <button class="icon-btn seat-group-add" type="button" data-seat-group-add title="添加座位组" aria-label="添加座位组">
+          <i data-lucide="plus"></i>
+        </button>
+      </div>
+      <span class="seat-group-summary" data-seat-group-summary></span>
+    </div>
+    <div class="seat-settings-actions">
+      <button class="secondary" type="button" data-seat-settings-close>取消</button>
+      <button class="primary" type="button" data-seat-resize>保存</button>
+    </div>
+  </dialog>
+  <div class="seat-board-workspace">
+    <aside class="seat-student-panel" aria-label="未放置学生">
+      <div class="seat-student-heading">
+        <strong>学生座位</strong><span data-seat-count></span>
+      </div>
+      <p class="seat-board-hint">点选学生，再点击空座位。PC 端也可直接拖放。</p>
+      <div class="seat-student-list" data-seat-students></div>
+    </aside>
+    <div class="seat-grid-scroll" tabindex="0" aria-label="可滚动座位区域">
+      <div class="seat-room">
+        <div class="seat-podium" aria-label="教室前方讲台">
+          <span class="seat-podium-art" aria-hidden="true"></span>
+          <span>讲台</span>
+        </div>
+        <div class="seat-grid" data-seat-grid role="grid"></div>
+      </div>
+    </div>
+  </div>
+  <div class="seat-board-status sr-only" data-seat-status role="status" aria-live="polite"></div>
+</section>

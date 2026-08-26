@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teacher Logbook</title>
+    <script src="assets/lucide.min.js"></script>
+    <link rel="stylesheet" href="assets/styles/common.css" />
+    <link
+      id="skinStylesheet"
+      rel="stylesheet"
+      href="assets/styles/apple-style.css"
+    />
+  </head>
+
+  <body>
+    <div class="startup-loader" id="startupLoader" role="status" aria-live="polite">
+      <div class="startup-stamp" aria-hidden="true">TL</div>
+      <p class="startup-brand">TEACHER LOGBOOK</p>
+      <div class="startup-tags" aria-hidden="true">
+        <span>学生</span><span>记录</span><span>课程</span><span>分析</span>
+      </div>
+      <p class="startup-message">数字资产加载中...</p>
+    </div>
+    <div class="app">
+      <aside id="sidebar">
+        <div class="brand">
+          <div class="brand-mark">TL</div>
+          <div>
+            <div class="brand-name">Teacher Logbook</div>
+            <small>Teacher workspace</small>
+          </div>
+        </div>
+        <nav id="nav"></nav>
+      </aside>
+      <button
+        class="sidebar-backdrop"
+        id="sidebarBackdrop"
+        type="button"
+        aria-label="关闭菜单"
+      ></button>
+      <main>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="pageCode">DASHBOARD / OVERVIEW</p>
+            <h1 id="pageName">班级总览</h1>
+          </div>
+          <div class="toolbar">
+            <button
+              class="icon-btn mobile-menu"
+              id="menuToggle"
+              aria-expanded="false"
+              aria-controls="sidebar"
+              title="打开菜单"
+            >
+              <i data-lucide="menu"></i>
+            </button>
+            <div class="skin-picker">
+              <button
+                class="icon-btn"
+                id="skinToggle"
+                title="切换界面皮肤"
+                aria-expanded="false"
+                aria-controls="skinMenu"
+              >
+                <i data-lucide="palette"></i>
+              </button>
+              <div class="skin-menu" id="skinMenu" hidden role="menu">
+                <h3>界面皮肤</h3>
+                <button
+                  class="skin-option"
+                  type="button"
+                  role="menuitemradio"
+                  data-ui-skin="mint"
+                  style="
+                    --swatch-one: #f3f1eb;
+                    --swatch-two: #ffffff;
+                    --swatch-three: #357266;
+                  "
+                >
+                  <span class="skin-swatch"
+                    ><span></span><span></span><span></span></span
+                  ><span
+                    ><strong>浅薄荷绿</strong
+                    ><small>清新、安静的台账风格</small></span
+                  ></button
+                ><button
+                  class="skin-option"
+                  type="button"
+                  role="menuitemradio"
+                  data-ui-skin="ngrok"
+                  style="
+                    --swatch-one: #211b3f;
+                    --swatch-two: #f8f7f3;
+                    --swatch-three: #ff4f87;
+                  "
+                >
+                  <span class="skin-swatch"
+                    ><span></span><span></span><span></span></span
+                  ><span
+                    ><strong>ngrok</strong
+                    ><small>深靛编辑感与洋红强调</small></span
+                  ></button
+                ><button
+                  class="skin-option"
+                  type="button"
+                  role="menuitemradio"
+                  data-ui-skin="apple"
+                  style="
+                    --swatch-one: #f5f5f7;
+                    --swatch-two: #ffffff;
+                    --swatch-three: #0071e3;
+                  "
+                >
+                  <span class="skin-swatch"
+                    ><span></span><span></span><span></span></span
+                  ><span
+                    ><strong>Apple</strong
+                    ><small>轻盈留白与克制蓝色</small></span
+                  ></button
+                ><button
+                  class="skin-option"
+                  type="button"
+                  role="menuitemradio"
+                  data-ui-skin="mr"
+                  style="
+                    --swatch-one: #171717;
+                    --swatch-two: #f7f5ee;
+                    --swatch-three: #dfff00;
+                  "
+                >
+                  <span class="skin-swatch"
+                    ><span></span><span></span><span></span></span
+                  ><span
+                    ><strong>MR Design</strong
+                    ><small>日式黑白网格与亮色</small></span
+                  ></button
+                >
+                <button
+                  class="skin-option"
+                  type="button"
+                  role="menuitem"
+                  data-ui-skin="custom"
+                  style="
+                    --swatch-one: #ffffff;
+                    --swatch-two: #d8d8d8;
+                    --swatch-three: #171717;
+                  "
+                >
+                  <span class="skin-swatch"
+                    ><span></span><span></span><span></span></span
+                  ><span
+                    ><strong>自定义 CSS</strong
+                    ><small>加载 xxx-style.css</small></span
+                  >
+                </button>
+              </div>
+            </div>
+            <button class="icon-btn" id="openSettings" title="数据管理">
+              <i data-lucide="settings"></i>
+            </button>
+          </div>
+        </header>
+
+        <section id="dashboard" class="page active">
+          <div class="section-head">
+            <div>
+              <h2>快捷操作</h2>
+              <span class="section-label">QUICK ACTIONS</span>
+            </div>
+          </div>
+          <div class="quick">
+            <button data-quick="leave">
+              <i data-lucide="calendar-off"></i>记请假</button
+            ><button data-quick="homework">
+              <i data-lucide="book-open-check"></i>记作业</button
+            ><button data-quick="violations">
+              <i data-lucide="shield-alert"></i>记违纪</button
+            ><button data-quick="work">
+              <i data-lucide="clipboard-pen-line"></i>记工作</button
+            ><button data-nav="students">
+              <i data-lucide="users"></i>学生管理
+            </button>
+          </div>
+          <div class="section-head">
+            <div>
+              <h2>数据概览</h2>
+              <span class="section-label">KEY METRICS</span>
+            </div>
+          </div>
+          <div class="metric-grid" id="metrics"></div>
+          <div class="section-head">
+            <div>
+              <h2>风险预警</h2>
+              <span class="section-label">RISK ALERT</span>
+            </div>
+          </div>
+          <div class="risk-grid" id="risks"></div>
+          <div class="section-head">
+            <h2>重点事项</h2>
+          </div>
+          <div class="columns">
+            <section class="panel">
+              <header class="panel-header">
+                高风险学生提醒 <span id="riskCount" class="badge danger"></span>
+              </header>
+              <div class="panel-body" id="riskList"></div>
+            </section>
+            <section class="panel">
+              <header class="panel-header">
+                近期需跟进事项 <span id="todoCount" class="badge"></span>
+              </header>
+              <div class="panel-body" id="todoList"></div>
+            </section>
+          </div>
+          <div class="section-head">
+            <h2>教学概览</h2>
+          </div>
+          <div class="columns">
+            <section class="panel">
+              <header class="panel-header">最近考试科目平均分</header>
+              <div class="panel-body" id="examSummary"></div>
+            </section>
+            <section class="panel">
+              <header class="panel-header">近期工作记录</header>
+              <div class="panel-body" id="workList"></div>
+            </section>
+          </div>
+        </section>
+        <section id="records" class="page">
+          <div class="view-head">
+            <p class="view-description" id="recordDescription"></p>
+            <div class="toolbar">
+              <button class="secondary" id="exportCurrent" title="导出 CSV">
+                <i data-lucide="file-down"></i>导出 CSV</button
+              ><button class="primary" id="addRecord" title="新增记录">
+                <i data-lucide="plus"></i>新增记录
+              </button>
+            </div>
+          </div>
+          <div id="recordContent">
+            <section class="panel">
+              <div class="data-table-wrap">
+                <table class="data-table">
+                  <thead id="tableHead"></thead>
+                  <tbody id="tableBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+        <section id="settings" class="page">
+          <div class="settings-grid">
+            <section class="setting">
+              <h3>导出台账数据</h3>
+              <p>下载包含全部学生和记录的 JSON 备份，可在另一台设备恢复。</p>
+              <button class="primary" id="exportSettings">
+                <i data-lucide="download"></i>导出 JSON
+              </button>
+            </section>
+            <section class="setting">
+              <h3>导入台账备份</h3>
+              <p>
+                导入 Teacher Logbook 导出的 JSON
+                文件，导入后会覆盖本设备当前数据。
+              </p>
+              <button class="primary" id="importBackup">
+                <i data-lucide="upload"></i>导入 JSON
+              </button>
+            </section>
+            <section class="setting">
+              <h3>清空本地数据</h3>
+              <p>移除 Teacher Logbook 在本浏览器中保存的全部台账。</p>
+              <button class="secondary" id="clearData">清空数据</button>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+    <dialog id="recordDialog">
+      <div class="modal-head">
+        <span id="dialogTitle">新增记录</span
+        ><button id="closeDialog" title="关闭"><i data-lucide="x"></i></button>
+      </div>
+      <form class="form" id="recordForm" method="dialog"></form>
+    </dialog>
+    <input id="studentImport" type="file" accept=".csv,text/csv" hidden />
+    <input
+      id="backupImport"
+      type="file"
+      accept=".json,application/json"
+      hidden
+    />
+    <script type="module" src="assets/js/app.js"></script>
+  </body>
+</html>

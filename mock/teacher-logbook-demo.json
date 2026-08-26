@@ -1,0 +1,83 @@
+{
+  "students": [
+    {"id":"stu-01","name":"李明","gender":"男","contact":"13800000001"},
+    {"id":"stu-02","name":"王晓雨","gender":"女","contact":"13800000002"},
+    {"id":"stu-03","name":"陈子涵","gender":"女","contact":"13800000003"},
+    {"id":"stu-04","name":"赵宇航","gender":"男","contact":"13800000004"},
+    {"id":"stu-05","name":"周思远","gender":"男","contact":"13800000005"},
+    {"id":"stu-06","name":"孙悦","gender":"女","contact":"13800000006"}
+  ],
+  "leave": [
+    {"id":"leave-01","student":"李明","reason":"病假","date":"2026-08-24"},
+    {"id":"leave-02","student":"孙悦","reason":"事假","date":"2026-08-22"}
+  ],
+  "homework": [
+    {"id":"hw-01","subject":"数学","title":"二次函数练习","unsubmitted":"2","date":"2026-08-24"},
+    {"id":"hw-02","subject":"语文","title":"第3单元预习","unsubmitted":"1","date":"2026-08-23"},
+    {"id":"hw-03","subject":"英语","title":"Unit 2 单词听写","unsubmitted":"0","date":"2026-08-22"}
+  ],
+  "violations": [
+    {"id":"vio-01","student":"赵宇航","type":"课堂纪律","date":"2026-08-21","note":"已完成谈话，后续观察。"},
+    {"id":"vio-02","student":"周思远","type":"迟到","date":"2026-08-20","note":"已提醒按时到校。"}
+  ],
+  "alerts": [
+    {"id":"alert-01","student":"王晓雨","type":"情绪预警","level":"高","status":"跟进中","note":"近期情绪波动，已联系家长。"},
+    {"id":"alert-02","student":"陈子涵","type":"特殊体质","level":"中","status":"待处理","note":"花粉过敏，需提醒春季防护。"},
+    {"id":"alert-03","student":"孙悦","type":"未返校","level":"低","status":"已关闭","note":"已于次日返校。"}
+  ],
+  "todos": [
+    {"id":"todo-01","title":"整理家长会材料","due":"2026-08-26","status":"待完成"},
+    {"id":"todo-02","title":"提交周工作简报","due":"2026-08-25","status":"待完成"},
+    {"id":"todo-03","title":"更新班级座位表","due":"2026-08-23","status":"已完成"}
+  ],
+  "work": [
+    {"id":"work-01","title":"新学期班级常规教育","date":"2026-08-24","note":"完成班规与安全教育。"},
+    {"id":"work-02","title":"家长会筹备","date":"2026-08-22","note":"确认会议议程与资料清单。"}
+  ],
+  "exams": [
+    {"id":"exam-01","subject":"数学","name":"暑期学习检测","average":"82.5","date":"2026-08-23"},
+    {"id":"exam-02","subject":"英语","name":"暑期学习检测","average":"78.0","date":"2026-08-23"}
+  ],
+  "classCommittee": [
+    {"id":"committee-01","student":"李明","role":"班长","duty":"协助班主任组织班级日常事务。"},
+    {"id":"committee-02","student":"王晓雨","role":"学习委员","duty":"收集作业情况并协助学习活动。"}
+  ],
+  "hygiene": [
+    {"id":"hygiene-01","student":"陈子涵","area":"讲台与黑板","day":"周一、周三"},
+    {"id":"hygiene-02","student":"赵宇航","area":"教室后区","day":"周二、周四"}
+  ],
+  "seats": [
+    {"id":"seat-01","student":"李明","seat":"第1组第2排","note":"靠前便于组织。"},
+    {"id":"seat-02","student":"王晓雨","seat":"第2组第2排","note":""}
+  ],
+  "activities": [
+    {"id":"activity-01","title":"开学第一课主题班会","date":"2026-08-24","note":"全体学生参与。"}
+  ],
+  "finance": [
+    {"id":"finance-01","type":"收入","amount":"300","note":"班费收缴","date":"2026-08-20"},
+    {"id":"finance-02","type":"支出","amount":"86.5","note":"班级清洁用品","date":"2026-08-21"}
+  ],
+  "awards": [
+    {"id":"award-01","student":"陈子涵","type":"表扬","note":"主动帮助同学整理学习资料。","date":"2026-08-23"}
+  ],
+  "courses": [
+    {"id":"course-01","course":"数学","teacher":"张老师","time":"周一 08:00-08:45"},
+    {"id":"course-02","course":"语文","teacher":"刘老师","time":"周一 08:55-09:40"}
+  ],
+  "talks": [
+    {"id":"talk-01","student":"赵宇航","date":"2026-08-21","note":"沟通课堂纪律与个人改进目标。"}
+  ],
+  "contacts": [
+    {"id":"contact-01","student":"王晓雨","method":"电话","date":"2026-08-23","note":"反馈学习和情绪情况。"},
+    {"id":"contact-02","student":"李明","method":"家访","date":"2026-08-22","note":"了解家庭学习环境。"}
+  ],
+  "training": [
+    {"id":"training-01","category":"培训","title":"班主任心理支持培训","hours":"4","date":"2026-08-18"},
+    {"id":"training-02","category":"讲座","title":"家校沟通专题讲座","hours":"2","date":"2026-08-16"},
+    {"id":"training-03","category":"活动","title":"年级德育工作交流","hours":"2","date":"2026-08-15"}
+  ],
+  "links": [
+    {"id":"link-01","title":"国家中小学智慧教育平台","url":"https://www.zxx.edu.cn/"},
+    {"id":"link-02","title":"教育部官网","url":"https://www.moe.gov.cn/"}
+  ]
+}
