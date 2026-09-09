@@ -1,0 +1,37 @@
+{
+  "name": "teacher-logbook",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@10.9.4",
+  "engines": {
+    "node": ">=24.14.0 <25"
+  },
+  "scripts": {
+    "dev:web": "npm run dev --workspace=@teacher-logbook/web",
+    "dev:miniapp": "npm run dev --workspace=@teacher-logbook/miniapp",
+    "build:web": "npm run build --workspace=@teacher-logbook/web",
+    "build:miniapp": "npm run build --workspace=@teacher-logbook/miniapp",
+    "api:generate": "node scripts/generate-api-types.mjs",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "vitest run",
+    "test:legacy": "node --test vanilla-js/tests/logbook.test.mjs"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7",
+    "vite": "7.3.6"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "overrides": {
+    "@dcloudio/uni-mp-weixin@3.0.0-5020420260813003": {
+      "ws": "8.21.3"
+    },
+    "@dcloudio/uni-nvue-styler@3.0.0-5020420260813003": {
+      "postcss": "8.5.28"
+    }
+  }
+}
