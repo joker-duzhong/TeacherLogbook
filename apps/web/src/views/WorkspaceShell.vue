@@ -28,7 +28,7 @@ async function logout() { auth.clearSession(); workspace.reset(); await router.r
   <div class="business-app" :data-theme="workspace.skin" :style="themeVariables(workspace.skin)">
     <button v-if="menuOpen" class="nav-backdrop" aria-label="关闭导航" @click="menuOpen = false"></button>
     <aside class="business-nav" :class="{ open: menuOpen }">
-      <RouterLink to="/workspace/dashboard" class="workspace-brand">教师台账<span>班主任工作台</span></RouterLink>
+      <RouterLink to="/workspace/dashboard" class="workspace-brand"><img class="brand-logo" src="/brand/logo.png" alt="" width="44" height="44" /><div>教师台账<span>班主任工作台</span></div></RouterLink>
       <nav aria-label="工作台导航">
         <section v-for="(group, index) in groups" :key="group">
           <button class="nav-group-toggle" :aria-expanded="!collapsed.includes(group)" @click="toggleGroup(group)"><component :is="groupIcons[index]" :size="15"/><span>{{ group }}</span><ChevronDown :size="14" :class="{rotated:collapsed.includes(group)}"/></button>

@@ -21,10 +21,14 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     const current = ++referenceRevision;
     const selected = classId.value;
     if (!selected) return;
-    const [people, positions] = await Promise.all([auth.api.allRecords(selected, 'students'), auth.api.allRecords(selected, 'committee-roles')]);
-    if (selected !== classId.value || current !== referenceRevision) return;
-    students.value = people;
-    roles.value = positions;
+    try {
+      const [people, positions] = await Promise.all([auth.api.allRecords(selected, 'students'), auth.api.allRecords(selected, 'committee-roles')]);
+      if (selected !== classId.value || current !== referenceRevision) return;
+      students.value = people;
+      roles.value = positions;
+    } catch (cause) {
+      if (selected === classId.value && current === referenceRevision) throw cause;
+    }
   }
   async function selectClass(id: string) {
     classId.value = id;
@@ -42,6 +46,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       if (current !== revision) return;
       classes.value = list;
       await selectClass(list.some(item => item.id === classId.value) ? classId.value : list[0]?.id ?? '');
+      if (current !== revision) return;
       const preference = await auth.api.getSkin();
       if (current === revision) skin.value = themes.some(theme => theme.id === preference) ? preference : 'mr';
     } catch (cause) { if (current === revision) error.value = message(cause); }

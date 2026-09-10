@@ -37,12 +37,10 @@ export function buildScanUrl(pageUrl: string, transactionId: string): string {
   url.searchParams.delete('env');
   url.searchParams.set('transaction_id', transactionId);
   if (environments[0] === 'local') url.searchParams.set('env', 'local');
-  console.log('buildScanUrl', pageUrl, transactionId, url.href);
   return url.href;
 }
 
 export function createScanLogin(options: ScanLoginOptions) {
-  console.log('createScanLogin', options);
   const state = shallowRef<ScanView>({ phase: 'IDLE', image: '', expiresAt: null, error: '' });
   let generation = 0;
   let session: ScanSession | undefined;

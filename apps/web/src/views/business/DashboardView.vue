@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { Dashboard } from '@teacher-logbook/api-client';
 import { localDate } from '@teacher-logbook/shared';
 import { useAuthStore } from '../../stores/auth';
@@ -10,12 +10,20 @@ const data = ref<Dashboard>();
 const date = ref(localDate());
 const error = ref('');
 const busy = ref(false);
+let revision = 0;
+onBeforeUnmount(() => { revision++; });
 const metrics = computed(() => data.value ? [
   ['学生人数', data.value.studentSummary.total, 'students'], ['今日请假', data.value.leaveToday, 'leave'], ['未交作业人次', data.value.unsubmittedHomework, 'homework'],
   ['违纪记录', data.value.violationCount, 'violations'], ['本月工作', data.value.workRecordsThisMonth, 'work'], ['待办事项', data.value.pendingTodoCount, 'todos'],
 ] : []);
 const risks = computed(() => data.value ? [['情绪预警', data.value.alertSummary.emotion, 'emotion'], ['特殊体质', data.value.alertSummary.specialHealth, 'health'], ['辍学风险', data.value.alertSummary.dropoutRisk, 'dropout'], ['未返校', data.value.alertSummary.notReturned, 'not-returned'], ['待处理', data.value.alertSummary.pending, 'alerts']] : []);
-async function load() { busy.value = true; error.value = ''; try { data.value = await auth.api.getDashboard(workspace.classId, date.value); } catch (cause) { error.value = workspace.message(cause); } finally { busy.value = false; } }
+async function load() {
+  const current = ++revision;
+  busy.value = true; error.value = '';
+  try { const value = await auth.api.getDashboard(workspace.classId, date.value); if (current === revision) data.value = value; }
+  catch (cause) { if (current === revision) error.value = workspace.message(cause); }
+  finally { if (current === revision) busy.value = false; }
+}
 onMounted(load);
 </script>
 <template>

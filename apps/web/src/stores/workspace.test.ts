@@ -40,4 +40,29 @@ describe('workspace request lifecycle', () => {
     expect(workspace.busy).toBe(false);
     expect(api.getSkin).not.toHaveBeenCalled();
   });
+  it('ignores an older failure after selecting the same class again', async () => {
+    let fail: (cause: Error) => void = () => {};
+    api.allRecords.mockImplementationOnce(() => new Promise((_, reject) => { fail = reject; })).mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: 'latest-student', name: '学生' }]).mockResolvedValueOnce([]);
+    const workspace = useWorkspaceStore();
+    const first = workspace.selectClass('class-one');
+    await workspace.selectClass('class-one');
+    fail(new Error('旧请求失败'));
+    await first;
+    expect(workspace.error).toBe('');
+    expect(workspace.students[0]?.id).toBe('latest-student');
+  });
+  it('does not request preferences after logout during reference loading', async () => {
+    const finishes: Array<(value: unknown[]) => void> = [];
+    api.listClasses.mockResolvedValue([{ id: 'class-one', name: '一班' }]);
+    api.allRecords.mockImplementation(() => new Promise(resolve => { finishes.push(resolve); }));
+    const workspace = useWorkspaceStore();
+    const pending = workspace.load();
+    await vi.waitFor(() => expect(api.allRecords).toHaveBeenCalledTimes(2));
+    workspace.reset();
+    finishes.forEach(finish => finish([]));
+    await pending;
+    expect(workspace.classId).toBe('');
+    expect(api.getSkin).not.toHaveBeenCalled();
+  });
 });

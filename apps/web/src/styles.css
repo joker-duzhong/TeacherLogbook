@@ -41,7 +41,8 @@ a { color: inherit; text-decoration: none; }
 .login-page[data-theme=mr] .login-panel h2 { font-weight: 800; }
 .login-page[data-theme=ngrok] .login-panel h2 { font-family: Georgia, "Microsoft YaHei", serif; }
 .site-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 96px; border-bottom: 1px solid var(--line); }
-.brand { display: inline-flex; align-items: baseline; gap: 18px; font-size: 22px; font-weight: 600; }
+.brand { display: inline-flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 600; }
+.brand-logo { display: block; flex-shrink: 0; object-fit: contain; }
 .brand span { font-size: 13px; color: var(--muted); font-weight: 400; }
 .login-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 440px); align-items: center; gap: clamp(40px, 7vw, 130px); width: 100%; max-width: 1200px; margin: auto; padding: 64px 0; }
 .login-intro h1 { margin: 0; font-size: clamp(28px, 2.8vw, 42px); font-weight: 600; line-height: 1.6; text-wrap: balance; }
@@ -99,7 +100,8 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 720px) {
   .login-page, .workspace-page { padding: 0 20px; }
   .site-header { min-height: 76px; }
-  .brand { font-size: 20px; }
+  .brand { gap: 10px; font-size: 20px; }
+  .brand .brand-logo { width: 40px; height: 40px; }
   .brand span { display: none; }
   .login-layout { display: block; max-width: 440px; padding: 32px 0; }
   .login-intro { margin-bottom: 28px; }

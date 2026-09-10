@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-09-10 · 接入小鸟 Logo 与浏览器图标
+
+- 使用根目录 logo.jpeg 制作页面透明 PNG，裁去多余外围留白，保留小鸟原有金棕色和内部米白色图案；登录页页头、工作台侧栏接入同一资源，设置明确尺寸并按比例显示，适配移动端。
+- 新增包含 16/32/48 像素的 favicon.ico、32 像素 PNG 浏览器图标及 180 像素 Apple 收藏图标，并在 HTML 入口声明。
+- 验证：4 组现有浏览器回归通过，覆盖桌面、320/390px 手机及四套皮肤；核对登录页截图和深浅背景的小尺寸 Logo。四个资源地址均返回 200 且与本地文件一致，ICO 包含 16/32/48 像素。Web 类型检查及生产构建通过，产物包含全部资源与图标声明；保留既有主包体积提示。
+- 本轮文件：apps/web/public/brand/logo.png、apps/web/public/favicon.ico、apps/web/public/favicon-32x32.png、apps/web/public/apple-touch-icon.png、apps/web/index.html、apps/web/src/views/LoginView.vue、apps/web/src/views/WorkspaceShell.vue、apps/web/src/styles.css、apps/web/src/views/workspace.css、CHANGELOG.md。
+
+## 2026-09-10 · Web 业务流程修复与回归补齐
+
+- 班级创建对空白名称给出明确提示，创建失败保留输入，提交期间禁止重复请求；创建成功使用返回班级更新列表并切换，重命名和删除同步更新本地列表并显示结果，避免整页加载中断操作反馈。
+- 班级引用忽略旧请求失败，退出期间停止后续偏好读取；记录查询与统计忽略迟到响应，记录写入禁止重复提交，日期筛选清空后不发送 null 字符串。
+- 删除、迁移、恢复和清空操作绑定发起页面及班级，离开页面关闭确认框并停止后续操作；备份和旧数据检查必须返回 valid=true 才允许继续，复检失败清除旧校验状态。
+- 座位布局在弹窗内显示校验及接口错误，请求期间锁定布局输入和关闭动作；清理扫码工具的残留调试日志。
+- 扩展隔离浏览器夹具的班级增删改、分类筛选和分页能力，补充班级完整流程、失败重试、防重复提交、无效文件、失效确认框、座位错误、查询竞态、总览快捷录入、日期筛选及待办完成/重开，并将 19 类记录扩展为增改删回归。
+- 验证：102 项单元测试、Web 类型检查及生产构建通过；26 组浏览器用例均已验证通过（完整运行 25 组通过，最后 1 组修正成功/错误提示的选择器歧义后单独复测通过）。保留既有主包超过 500 kB 的构建提示。
+- 只读联调：localhost:5174 的 OpenAPI 代理返回 200，57 条台账业务路径可读取，19 类资源所需列表、新增、POST 修改及删除入口均存在，班级名称上限与前端的 100 字符一致。浏览器写操作使用隔离测试响应，不代表真实账号及真实后端写入验收。
+- 本轮文件：apps/web/src/views/business/SettingsView.vue、apps/web/src/views/business/RecordsView.vue、apps/web/src/views/business/DashboardView.vue、apps/web/src/views/business/SeatBoardView.vue、apps/web/src/views/business/DataView.vue、apps/web/src/stores/workspace.ts、apps/web/src/stores/workspace.test.ts、apps/web/src/lib/scan-login.ts、tests/web/workspace.spec.ts、CHANGELOG.md。
+
 ## 2026-09-09 · 补齐本地与线上环境配置
 
 - 新建并填写 apps/web/.env.development 和 apps/web/.env.production，包含已确认的 API 前缀、扫码业务标识及对应的 passport 扫码地址；本地配置额外提供后端开发代理。

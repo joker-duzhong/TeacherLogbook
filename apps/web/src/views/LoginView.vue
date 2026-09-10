@@ -107,7 +107,7 @@ async function login() {
 <template>
   <main class="login-page" :data-theme="loginTheme" :style="themeVariables(loginTheme)">
     <header class="site-header">
-      <a class="brand" href="/login" aria-label="教师台账登录首页">教师台账<span>班主任工作台</span></a>
+      <a class="brand" href="/login" aria-label="教师台账登录首页"><img class="brand-logo" src="/brand/logo.png" alt="" width="48" height="48" />教师台账<span>班主任工作台</span></a>
       <el-popover v-model:visible="themeMenuOpen" trigger="click" placement="bottom-end" :width="208" :teleported="false">
         <template #reference>
           <button class="login-theme-trigger" type="button" aria-label="切换主题" title="切换主题" :aria-expanded="themeMenuOpen" aria-controls="login-theme-options">
