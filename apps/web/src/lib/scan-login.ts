@@ -20,6 +20,12 @@ interface ScanLoginOptions {
   onLogin: (result: LoginResult) => void | Promise<void>;
 }
 
+export function resolveScanPageUrl(configuredUrl: string | undefined, development: boolean): string {
+  return configuredUrl || (development
+    ? 'http://192.168.31.93:5173/passport/scan?env=local'
+    : 'https://tool.lxyy.fun/passport/scan');
+}
+
 export function buildScanUrl(pageUrl: string, transactionId: string): string {
   const url = new URL(pageUrl);
   const environments = url.searchParams.getAll('env');

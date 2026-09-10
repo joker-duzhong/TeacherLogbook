@@ -1,4 +1,6 @@
 import type { components } from './schema';
+import { createLogbookApi } from './logbook';
+export * from './logbook';
 
 export type ClassRecord = components['schemas']['ClassRead'];
 export type StudentRecord = components['schemas']['StudentRead'];
@@ -17,9 +19,11 @@ const scanSecretPattern = /^[A-Za-z0-9_-]{32,128}$/;
 
 export interface HttpRequest {
   url: string;
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   headers: Record<string, string>;
   body?: unknown;
+  responseType?: 'text';
+  upload?: { file: unknown; fields: Record<string, string> };
 }
 
 export interface HttpResponse {
@@ -59,6 +63,8 @@ function responseError(status: number, body: unknown): ApiError {
     : status === 429 ? '操作过于频繁，请稍后再试。'
     : status >= 500 ? '服务暂时不可用，请稍后重试。'
     : isRecord(body) && typeof body.message === 'string' ? body.message
+    : isRecord(body) && typeof body.detail === 'string' ? body.detail
+    : status === 412 ? '座位已被其他设备修改，请刷新后重新操作。'
     : status === 422 ? '请检查填写的信息。'
     : '请求失败，请稍后重试。';
   return new ApiError(message, status, fields);
@@ -171,6 +177,20 @@ export function createApi(options: ApiOptions) {
   }
 
   return {
+    ...createLogbookApi(request, async (route, upload) => {
+      const token = options.getAccessToken?.();
+      const response = await options.transport({ url: `${baseUrl}${route}`, method: upload ? 'POST' : 'GET',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        ...(upload ? { upload } : { responseType: 'text' as const }) });
+      if (response.status < 200 || response.status >= 300) {
+        if (response.status === 401) options.onUnauthorized?.();
+        throw responseError(response.status, response.body);
+      }
+      if (!upload) return response.body;
+      assertRecord(response.body);
+      if (response.body.code !== 200) throw responseError(Number(response.body.code), response.body);
+      return response.body.data;
+    }),
     async listScanApps(): Promise<ScanApp[]> {
       const data = await request('GET', '/auth/scan/apps', undefined, false);
       if (!Array.isArray(data) || !data.every((app) => isRecord(app) && typeof app.app_key === 'string' && typeof app.name === 'string')) {
@@ -216,6 +236,9 @@ export function createApi(options: ApiOptions) {
     },
     async getMe(): Promise<UserRecord> {
       return requireUser(await request('GET', '/auth/me'));
+    },
+    async bindPhone(phone: string, code: string): Promise<UserRecord> {
+      return requireUser(await request('POST', '/auth/phone/bind', { phone, code }));
     },
     async listClasses(): Promise<ClassRecord[]> {
       const data = await request('GET', '/teacher-logbook/classes');

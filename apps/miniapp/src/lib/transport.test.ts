@@ -13,6 +13,29 @@ function setup() {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('miniapp transport', () => {
+  it('uploads selected files with authentication and explicit form fields', async () => {
+    const upload = vi.fn<(options: UniApp.UploadFileOption) => void>();
+    vi.stubGlobal('uni', { uploadFile: upload });
+    const response = miniappTransport({ ...request, method: 'POST', headers: { Authorization: 'Bearer fixture-access' }, upload: { file: 'fixture.json', fields: { mode: 'merge' } } });
+    const options = upload.mock.calls[0]?.[0];
+    expect(options).toMatchObject({ name: 'file', filePath: 'fixture.json', timeout: 15000, header: { Authorization: 'Bearer fixture-access' }, formData: { mode: 'merge' } });
+    options?.success?.({ statusCode: 200, data: '{"code":200,"data":{"valid":true}}', errMsg: '' });
+    await expect(response).resolves.toMatchObject({ status: 200, body: { data: { valid: true } } });
+  });
+  it('preserves upload errors even when an upstream returns HTML', async () => {
+    const upload = vi.fn<(options: UniApp.UploadFileOption) => void>();
+    vi.stubGlobal('uni', { uploadFile: upload });
+    const response = miniappTransport({ ...request, method: 'POST', upload: { file: 'fixture.json', fields: {} } });
+    upload.mock.calls[0]?.[0].success?.({ statusCode: 401, data: '<html>expired</html>', errMsg: '' });
+    await expect(response).resolves.toEqual({ status: 401, body: null });
+  });
+  it('downloads text and parses failed JSON responses for shared errors', async () => {
+    const send = setup();
+    const response = miniappTransport({ ...request, responseType: 'text' });
+    expect(send.mock.calls[0]?.[0].dataType).toBe('text');
+    send.mock.calls[0]?.[0].success?.({ statusCode: 403, data: '{"detail":"denied"}', header: {}, cookies: [] });
+    await expect(response).resolves.toEqual({ status: 403, body: { detail: 'denied' } });
+  });
   it('forwards supported requests without adding a body or changing the method', async () => {
     const send = setup();
     const response = miniappTransport(request);
@@ -56,7 +79,7 @@ describe('miniapp transport', () => {
 
   it('rejects PATCH without sending a request or inventing a method override', async () => {
     const send = setup();
-    await expect(miniappTransport({ ...request, method: 'PATCH', body: { name: '测试学生' } })).rejects.toThrow('学生编辑需后端提供兼容接口');
+    await expect(miniappTransport({ ...request, method: 'PATCH', body: { name: '测试学生' } })).rejects.toThrow('POST 更新接口');
     expect(send).not.toHaveBeenCalled();
   });
 });

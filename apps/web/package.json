@@ -15,7 +15,8 @@
     "vue-router": "4.6.4",
     "pinia": "3.0.4",
     "element-plus": "2.14.5",
-    "qrcode": "1.5.4"
+    "qrcode": "1.5.4",
+    "@lucide/vue": "1.43.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "6.0.8",

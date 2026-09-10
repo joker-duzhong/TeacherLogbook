@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { createApi, LoginResult, ScanPoll, ScanSession } from '@teacher-logbook/api-client';
-import { buildScanUrl, createScanLogin } from './scan-login';
+import { buildScanUrl, createScanLogin, resolveScanPageUrl } from './scan-login';
 
 type Api = ReturnType<typeof createApi>;
 const transactionId = '00000000-0000-4000-8000-000000000001';
@@ -13,7 +13,7 @@ function deferred<Value>() {
   return { promise, resolve };
 }
 
-function setup(scanPageUrl = 'http://192.168.31.93:5173/scan') {
+function setup(scanPageUrl = 'http://192.168.31.93:5173/passport/scan') {
   const api = {
     listScanApps: vi.fn<Api['listScanApps']>().mockResolvedValue([{ app_key: 'hope_teacher_logbook', name: '工作台' }]),
     createScanSession: vi.fn<Api['createScanSession']>().mockResolvedValue({ ...session }),
@@ -31,15 +31,15 @@ afterEach(() => { vi.clearAllTimers(); vi.useRealTimers(); });
 
 describe('scan login lifecycle', () => {
   it('passes the local environment to QR rendering without exposing the poll token', async () => {
-    const { scan, renderQr } = setup('http://192.168.31.93:5173/scan?env=local');
+    const { scan, renderQr } = setup('http://192.168.31.93:5173/passport/scan?env=local');
     await scan.start();
-    expect(renderQr).toHaveBeenCalledExactlyOnceWith(`http://192.168.31.93:5173/scan?transaction_id=${transactionId}&env=local`);
+    expect(renderQr).toHaveBeenCalledExactlyOnceWith(`http://192.168.31.93:5173/passport/scan?transaction_id=${transactionId}&env=local`);
     expect(renderQr.mock.calls[0]?.[0]).not.toContain(session.poll_token);
   });
   it('renders only the transaction ID and observes the server poll interval', async () => {
     const { scan, api, renderQr } = setup();
     await scan.start();
-    expect(renderQr).toHaveBeenCalledExactlyOnceWith(`http://192.168.31.93:5173/scan?transaction_id=${transactionId}`);
+    expect(renderQr).toHaveBeenCalledExactlyOnceWith(`http://192.168.31.93:5173/passport/scan?transaction_id=${transactionId}`);
     expect(JSON.stringify(scan.state.value)).not.toContain(session.poll_token);
     await vi.advanceTimersByTimeAsync(1999);
     expect(api.pollScanSession).not.toHaveBeenCalled();
@@ -130,6 +130,26 @@ describe('scan login lifecycle', () => {
     expect(renderQr).toHaveBeenCalledOnce();
     expect(renderQr.mock.calls[0]?.[0]).toContain(transactionId);
   });
+  it('refreshes a pending scan and ignores an in-flight confirmation from the old session', async () => {
+    const { scan, api, onLogin, renderQr } = setup();
+    const confirmation = deferred<ScanPoll>();
+    api.pollScanSession.mockResolvedValueOnce({ transaction_id: transactionId, status: 'PENDING' }).mockReturnValueOnce(confirmation.promise);
+    await scan.start();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(scan.state.value.phase).toBe('PENDING');
+    await vi.advanceTimersByTimeAsync(2000);
+    const nextId = '00000000-0000-4000-8000-000000000002';
+    api.createScanSession.mockResolvedValueOnce({ ...session, transaction_id: nextId });
+    await scan.start();
+    confirmation.resolve({ transaction_id: transactionId, status: 'CONFIRMED', exchange_code: 'fixture-exchange-code-00000000000000' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(scan.state.value.phase).toBe('WAITING_SCAN');
+    expect(renderQr.mock.calls.at(-1)?.[0]).toContain(nextId);
+    expect(api.exchangeScanSession).not.toHaveBeenCalled();
+    expect(onLogin).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(api.pollScanSession).toHaveBeenLastCalledWith(nextId, session.poll_token);
+  });
   it('does not create a session for an unavailable application', async () => {
     const { scan, api } = setup();
     api.listScanApps.mockResolvedValue([]);
@@ -174,11 +194,21 @@ describe('scan login lifecycle', () => {
 });
 
 describe('scan URL environment', () => {
+  it('selects local passport scan in development and the public passport in production', () => {
+    expect(buildScanUrl(resolveScanPageUrl(undefined, true), transactionId)).toBe(`http://192.168.31.93:5173/passport/scan?transaction_id=${transactionId}&env=local`);
+    expect(buildScanUrl(resolveScanPageUrl(undefined, false), transactionId)).toBe(`https://tool.lxyy.fun/passport/scan?transaction_id=${transactionId}`);
+    expect(resolveScanPageUrl('', false)).toBe('https://tool.lxyy.fun/passport/scan');
+  });
+  it.each([true, false])('keeps explicit configuration first (development=%s)', (development) => {
+    const configured = 'https://example.test/passport/scan?env=local';
+    expect(resolveScanPageUrl(configured, development)).toBe(configured);
+    expect(buildScanUrl(resolveScanPageUrl(configured, development), transactionId)).toBe(`https://example.test/passport/scan?transaction_id=${transactionId}&env=local`);
+  });
   it('leaves production URLs without an environment parameter', () => {
-    expect(buildScanUrl('https://example.test/scan', transactionId)).toBe(`https://example.test/scan?transaction_id=${transactionId}`);
+    expect(buildScanUrl('https://tool.lxyy.fun/passport/scan', transactionId)).toBe(`https://tool.lxyy.fun/passport/scan?transaction_id=${transactionId}`);
   });
   it('preserves the explicit local environment after the real transaction ID', () => {
-    expect(buildScanUrl('http://192.168.31.93:5173/scan?env=local', transactionId)).toBe(`http://192.168.31.93:5173/scan?transaction_id=${transactionId}&env=local`);
+    expect(buildScanUrl('http://192.168.31.93:5173/passport/scan?env=local', transactionId)).toBe(`http://192.168.31.93:5173/passport/scan?transaction_id=${transactionId}&env=local`);
   });
   it.each([
     'env=',

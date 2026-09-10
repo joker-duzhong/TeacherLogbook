@@ -10,6 +10,7 @@ const prefix = '/api/v1/teacher-logbook';
 const selected = {
   '/api/v1/auth/sms/send': ['post'],
   '/api/v1/auth/phone/login': ['post'],
+  '/api/v1/auth/phone/bind': ['post'],
   '/api/v1/auth/miniapp/login': ['post'],
   '/api/v1/auth/refresh': ['post'],
   '/api/v1/auth/me': ['get'],
@@ -22,6 +23,11 @@ const selected = {
   [`${prefix}/classes/{class_id}/students/{student_id}`]: ['get', 'patch', 'delete'],
 };
 const paths = {};
+for (const [route, operations] of Object.entries(source.paths ?? {})) {
+  if (route.startsWith(prefix + '/')) {
+    selected[route] = Object.keys(operations).filter((method) => ['get', 'post', 'put', 'patch', 'delete'].includes(method));
+  }
+}
 for (const [route, methods] of Object.entries(selected)) {
   paths[route] = {};
   for (const method of methods) {

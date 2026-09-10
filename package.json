@@ -14,9 +14,11 @@
     "api:generate": "node scripts/generate-api-types.mjs",
     "typecheck": "npm run typecheck --workspaces",
     "test": "vitest run",
+    "test:web": "playwright test",
     "test:legacy": "node --test vanilla-js/tests/logbook.test.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "openapi-typescript": "7.13.0",
     "typescript": "5.9.3",
     "vitest": "3.2.7",

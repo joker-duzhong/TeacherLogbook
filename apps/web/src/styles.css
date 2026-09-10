@@ -29,7 +29,17 @@ button, input { font: inherit; }
 a { color: inherit; text-decoration: none; }
 :focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; }
 .login-page, .workspace-page { min-height: 100vh; min-height: 100dvh; padding: 0 6vw; }
-.login-page { display: flex; flex-direction: column; }
+.login-page { display: flex; flex-direction: column; background: var(--paper); color: var(--ink); --surface: var(--panel); --el-bg-color-overlay: var(--panel); --el-fill-color-blank: var(--panel); --el-fill-color-light: var(--paper); --el-text-color-regular: var(--ink); --el-text-color-placeholder: var(--muted); --el-border-color: var(--line); --el-border-color-light: var(--line); --el-border-color-lighter: var(--line); --el-color-primary-light-3: color-mix(in srgb, var(--brand) 70%, var(--panel)); --el-color-primary-light-5: color-mix(in srgb, var(--brand) 50%, var(--panel)); --el-color-primary-light-7: color-mix(in srgb, var(--brand) 30%, var(--panel)); --el-color-primary-light-8: color-mix(in srgb, var(--brand) 20%, var(--panel)); --el-color-primary-light-9: color-mix(in srgb, var(--brand) 10%, var(--panel)); --el-color-primary-dark-2: color-mix(in srgb, var(--brand) 80%, black); }
+.login-theme-trigger { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); cursor: pointer; }
+.login-theme-trigger:hover { background: var(--accent); }
+.login-theme-options { display: grid; gap: 4px; }
+.login-theme-options button { display: grid; grid-template-columns: 28px minmax(0, 1fr) 16px; align-items: center; gap: 10px; min-height: 40px; padding: 8px; border: 0; border-radius: var(--radius); background: transparent; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer; }
+.login-theme-options button:hover, .login-theme-options button[aria-pressed=true] { background: var(--accent); }
+.login-theme-swatch { display: flex; gap: 3px; align-items: center; justify-content: center; width: 28px; height: 24px; border: 1px solid; border-radius: 3px; }
+.login-theme-swatch i { width: 8px; height: 12px; }
+.login-page[data-theme=mr] .login-panel { border-radius: 0; }
+.login-page[data-theme=mr] .login-panel h2 { font-weight: 800; }
+.login-page[data-theme=ngrok] .login-panel h2 { font-family: Georgia, "Microsoft YaHei", serif; }
 .site-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 96px; border-bottom: 1px solid var(--line); }
 .brand { display: inline-flex; align-items: baseline; gap: 18px; font-size: 22px; font-weight: 600; }
 .brand span { font-size: 13px; color: var(--muted); font-weight: 400; }
@@ -42,12 +52,14 @@ a { color: inherit; text-decoration: none; }
 .login-panel { min-width: 0; padding: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .login-panel h2 { margin: 0; font-size: 26px; line-height: 1.4; font-weight: 600; }
 .panel-description { margin: 12px 0 28px; color: var(--muted); font-size: 14px; }
+.login-session-error { margin-bottom: 20px; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
 .login-tabs .el-tabs__item { height: 48px; font-size: 15px; }
 .login-tabs .el-tabs__nav-wrap::after { height: 1px; }
 .login-tabs .el-tabs__header { margin-bottom: 28px; }
+.login-tabs.phone-only .el-tabs__header { display: none; }
 .login-tabs .el-tabs__content { min-height: 298px; }
 .login-form .el-form-item { margin-bottom: 24px; }
-.login-form .el-form-item__label { height: auto; padding-bottom: 8px; color: #303930; line-height: 1.5; }
+.login-form .el-form-item__label { height: auto; padding-bottom: 8px; color: var(--ink); line-height: 1.5; }
 .login-form .el-input__wrapper { min-height: 46px; padding: 1px 14px; }
 .login-form .el-input__inner { font-size: 15px; }
 .code-input-row { display: flex; gap: 10px; width: 100%; }
@@ -66,6 +78,7 @@ a { color: inherit; text-decoration: none; }
 .qr-image-area.is-masked img { filter: blur(3px); opacity: 0.28; }
 .qr-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 20px; background: rgb(255 255 255 / 82%); overflow-y: auto; }
 .qr-overlay-title { margin: 0; max-width: 100%; font-size: 16px; font-weight: 600; line-height: 1.7; text-wrap: balance; }
+.qr-overlay-title.is-pending { font-size: 14px; }
 .qr-overlay-error { margin: 0; max-width: 100%; max-height: 72px; overflow-y: auto; color: #a32d32; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
 .qr-overlay .el-button { flex-shrink: 0; min-height: 40px; }
 .qr-login-hint { margin: 16px 0 0; font-size: 14px; line-height: 1.7; color: var(--muted); }

@@ -3,13 +3,18 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@teacher-logbook/api-client';
 import type { LoginResult } from '@teacher-logbook/api-client';
-import { getRemainingSeconds, isValidPhone, isValidSmsCode, normalizePhone } from '@teacher-logbook/shared';
+import { getRemainingSeconds, isValidPhone, isValidSmsCode, normalizePhone, themes, themeVariables } from '@teacher-logbook/shared';
+import { Check, Palette } from '@lucide/vue';
 import { useAuthStore } from '../stores/auth';
 import ScanLogin from './ScanLogin.vue';
 
 const auth = useAuthStore();
 const router = useRouter();
-const loginMethod = ref('wechat');
+const mobileViewport = window.matchMedia('(max-width: 720px)');
+const isMobile = ref(mobileViewport.matches);
+const loginMethod = ref(isMobile.value ? 'phone' : 'wechat');
+const loginTheme = ref('mint');
+const themeMenuOpen = ref(false);
 const form = reactive({ phone: '', code: '' });
 const fieldErrors = reactive({ phone: '', code: '' });
 const errorMessage = ref('');
@@ -21,11 +26,18 @@ let deadline = 0;
 let interval: ReturnType<typeof setInterval> | undefined;
 let disposed = false;
 
+function updateViewport(event: MediaQueryListEvent) {
+  isMobile.value = event.matches;
+  if (event.matches) loginMethod.value = 'phone';
+}
+
+mobileViewport.addEventListener('change', updateViewport);
 onMounted(() => {
   interval = setInterval(() => { countdown.value = getRemainingSeconds(deadline, Date.now()); }, 1000);
 });
 onUnmounted(() => {
   disposed = true;
+  mobileViewport.removeEventListener('change', updateViewport);
   if (interval !== undefined) clearInterval(interval);
 });
 
@@ -47,6 +59,11 @@ async function completeLogin(result: LoginResult) {
   auth.acceptLogin(result);
   form.code = '';
   await router.replace({ name: 'workspace' });
+}
+
+async function retrySession() {
+  await auth.restoreSession(true);
+  if (!disposed && auth.isAuthenticated) await router.replace({ name: 'workspace' });
 }
 
 async function sendSms() {
@@ -88,9 +105,22 @@ async function login() {
 </script>
 
 <template>
-  <main class="login-page">
+  <main class="login-page" :data-theme="loginTheme" :style="themeVariables(loginTheme)">
     <header class="site-header">
       <a class="brand" href="/login" aria-label="教师台账登录首页">教师台账<span>班主任工作台</span></a>
+      <el-popover v-model:visible="themeMenuOpen" trigger="click" placement="bottom-end" :width="208" :teleported="false">
+        <template #reference>
+          <button class="login-theme-trigger" type="button" aria-label="切换主题" title="切换主题" :aria-expanded="themeMenuOpen" aria-controls="login-theme-options">
+            <Palette :size="20" aria-hidden="true" />
+          </button>
+        </template>
+        <div id="login-theme-options" class="login-theme-options" role="group" aria-label="登录页主题">
+          <button v-for="theme in themes" :key="theme.id" type="button" :aria-pressed="loginTheme === theme.id" @click="loginTheme = theme.id; themeMenuOpen = false">
+            <span class="login-theme-swatch" :style="{ background: theme.paper, borderColor: theme.line }" aria-hidden="true"><i :style="{ background: theme.brand }"></i><i :style="{ background: theme.accent }"></i></span>
+            <span>{{ theme.name }}</span><Check v-if="loginTheme === theme.id" :size="16" aria-hidden="true" />
+          </button>
+        </div>
+      </el-popover>
     </header>
 
     <div class="login-layout">
@@ -107,9 +137,13 @@ async function login() {
       <section class="login-panel" aria-labelledby="login-title">
         <h2 id="login-title">登录工作台</h2>
         <p class="panel-description">使用你的账号，继续班级工作。</p>
-        <el-tabs v-model="loginMethod" stretch class="login-tabs">
-          <el-tab-pane label="微信扫码" name="wechat" :disabled="submitting || sending">
-            <ScanLogin v-if="loginMethod === 'wechat'" @login="completeLogin" />
+        <div v-if="auth.restoreError || auth.storageError" class="login-session-error" role="alert">
+          <p class="error-message">{{ auth.restoreError || auth.storageError }}</p>
+          <el-button v-if="auth.restoreError" native-type="button" :loading="auth.restoring" :disabled="submitting || sending" @click="retrySession">重新验证登录</el-button>
+        </div>
+        <el-tabs v-model="loginMethod" stretch class="login-tabs" :class="{ 'phone-only': isMobile }">
+          <el-tab-pane v-if="!isMobile" label="微信扫码" name="wechat" :disabled="submitting || sending">
+            <ScanLogin v-if="loginMethod === 'wechat' && !auth.restoreError && !auth.restoring" @login="completeLogin" />
           </el-tab-pane>
           <el-tab-pane label="手机号验证码" name="phone">
             <el-form label-position="top" class="login-form" @submit.prevent="login">
