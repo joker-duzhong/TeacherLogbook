@@ -3,7 +3,7 @@ import { ApiError, createApi } from './index';
 import type { HttpResponse, Transport } from './index';
 
 const user = { id: '00000000-0000-4000-8000-000000000001', needs_phone_binding: false };
-const login = { access_token: 'fixture-access', refresh_token: 'fixture-refresh', user };
+const login = { access_token: 'fixture-access', refresh_token: 'fixture-refresh', app_scope: 'hope_teacher_logbook', user };
 function setup(response: HttpResponse) {
   const transport = vi.fn<Transport>().mockResolvedValue(response);
   const onUnauthorized = vi.fn();

@@ -1,18 +1,25 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@teacher-logbook/api-client';
 import type { LoginResult } from '@teacher-logbook/api-client';
 import { getRemainingSeconds, isValidPhone, isValidSmsCode, normalizePhone, themes, themeVariables } from '@teacher-logbook/shared';
 import { Check, Palette } from '@lucide/vue';
 import { useAuthStore } from '../stores/auth';
 import ScanLogin from './ScanLogin.vue';
+import { resolveScanPageUrl } from '../lib/scan-login';
+import { browserPassportLogin, isWechatBrowser, logbookAppKey, safeWorkspacePath } from '../lib/passport-login';
 
 const auth = useAuthStore();
 const router = useRouter();
+const route = useRoute();
+const inWechat = isWechatBrowser(navigator.userAgent);
+const passportBusy = ref(false);
+const passportError = ref('');
+const passport = browserPassportLogin(auth.api, resolveScanPageUrl(import.meta.env.VITE_SCAN_PAGE_URL), auth.acceptLogin);
 const mobileViewport = window.matchMedia('(max-width: 720px)');
 const isMobile = ref(mobileViewport.matches);
-const loginMethod = ref(isMobile.value ? 'phone' : 'wechat');
+const loginMethod = ref(isMobile.value || inWechat ? 'phone' : 'wechat');
 const loginTheme = ref('mint');
 const themeMenuOpen = ref(false);
 const form = reactive({ phone: '', code: '' });
@@ -34,12 +41,22 @@ function updateViewport(event: MediaQueryListEvent) {
 mobileViewport.addEventListener('change', updateViewport);
 onMounted(() => {
   interval = setInterval(() => { countdown.value = getRemainingSeconds(deadline, Date.now()); }, 1000);
+  if (inWechat && route.query.manual !== '1' && !auth.restoreError && !auth.storageError) void startPassport();
 });
 onUnmounted(() => {
   disposed = true;
+  passport.stop();
   mobileViewport.removeEventListener('change', updateViewport);
   if (interval !== undefined) clearInterval(interval);
 });
+
+async function startPassport(retry = false) {
+  if (passportBusy.value || disposed) return;
+  passportBusy.value = true; passportError.value = '';
+  try { await passport.start(route.query.redirect, retry); }
+  catch (error) { if (!disposed) passportError.value = error instanceof Error ? error.message : '微信登录未完成，请重试。'; }
+  finally { if (!disposed) passportBusy.value = false; }
+}
 
 function validatePhone() {
   fieldErrors.phone = isValidPhone(form.phone) ? '' : '请输入有效的中国大陆手机号。';
@@ -58,7 +75,7 @@ async function completeLogin(result: LoginResult) {
   if (disposed) return;
   auth.acceptLogin(result);
   form.code = '';
-  await router.replace({ name: 'workspace' });
+  await router.replace(safeWorkspacePath(route.query.redirect));
 }
 
 async function retrySession() {
@@ -93,7 +110,7 @@ async function login() {
   successMessage.value = '';
   submitting.value = true;
   try {
-    const result = await auth.api.loginWithPhone({ phone: normalizePhone(form.phone), code: form.code });
+    const result = await auth.api.loginWithPhone({ phone: normalizePhone(form.phone), code: form.code, app_key: logbookAppKey });
     if (disposed) return;
     await completeLogin(result);
   } catch (error) {
@@ -141,8 +158,13 @@ async function login() {
           <p class="error-message">{{ auth.restoreError || auth.storageError }}</p>
           <el-button v-if="auth.restoreError" native-type="button" :loading="auth.restoring" :disabled="submitting || sending" @click="retrySession">重新验证登录</el-button>
         </div>
-        <el-tabs v-model="loginMethod" stretch class="login-tabs" :class="{ 'phone-only': isMobile }">
-          <el-tab-pane v-if="!isMobile" label="微信扫码" name="wechat" :disabled="submitting || sending">
+        <div v-if="inWechat" class="wechat-login" :aria-busy="passportBusy">
+          <p v-if="passportBusy" role="status">正在前往授权中心…</p>
+          <p v-if="passportError" class="error-message" role="alert">{{ passportError }}</p>
+          <el-button v-if="!passportBusy" type="primary" :disabled="!!auth.restoreError" @click="startPassport(true)">{{ passportError ? '重新授权' : '前往授权中心登录' }}</el-button>
+        </div>
+        <el-tabs v-else v-model="loginMethod" stretch class="login-tabs" :class="{ 'phone-only': isMobile || inWechat }">
+          <el-tab-pane v-if="!isMobile && !inWechat" label="微信扫码" name="wechat" :disabled="submitting || sending">
             <ScanLogin v-if="loginMethod === 'wechat' && !auth.restoreError && !auth.restoring" @login="completeLogin" />
           </el-tab-pane>
           <el-tab-pane label="手机号验证码" name="phone">

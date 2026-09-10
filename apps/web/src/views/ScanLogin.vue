@@ -10,7 +10,7 @@ const auth = useAuthStore();
 const scan = createScanLogin({
   api: auth.api,
   appKey: import.meta.env.VITE_SCAN_APP_KEY || 'hope_teacher_logbook',
-  scanPageUrl: resolveScanPageUrl(import.meta.env.VITE_SCAN_PAGE_URL, import.meta.env.DEV),
+  scanPageUrl: resolveScanPageUrl(import.meta.env.VITE_SCAN_PAGE_URL),
   renderQr: (url) => QRCode.toDataURL(url, { width: 240, margin: 4, errorCorrectionLevel: 'M', color: { dark: '#000000', light: '#ffffff' } }),
   onLogin: (result) => { emit('login', result); },
 });

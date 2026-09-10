@@ -20,13 +20,12 @@ interface ScanLoginOptions {
   onLogin: (result: LoginResult) => void | Promise<void>;
 }
 
-export function resolveScanPageUrl(configuredUrl: string | undefined, development: boolean): string {
-  return configuredUrl || (development
-    ? 'http://192.168.31.93:5173/passport/scan?env=local'
-    : 'https://tool.lxyy.fun/passport/scan');
+export function resolveScanPageUrl(configuredUrl: string | undefined): string {
+  return configuredUrl?.trim() || '';
 }
 
 export function buildScanUrl(pageUrl: string, transactionId: string): string {
+  if (!pageUrl) throw new ApiError('尚未配置授权中心地址，请联系管理员。');
   const url = new URL(pageUrl);
   const environments = url.searchParams.getAll('env');
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.hash ||

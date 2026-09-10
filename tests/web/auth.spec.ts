@@ -4,7 +4,7 @@ import type { BrowserContext, Page } from '@playwright/test';
 const storageKey = 'teacher-logbook:access-token:/api/v1';
 const transactionId = '00000000-0000-4000-8000-000000000001';
 const user = { id: 'fixture-user', needs_phone_binding: false };
-const login = { access_token: 'fixture-access', refresh_token: 'fixture-refresh', token_type: 'bearer', user };
+const login = { access_token: 'fixture-access', refresh_token: 'fixture-refresh', app_scope: 'hope_teacher_logbook', token_type: 'bearer', user };
 
 async function mockAuth(context: BrowserContext) {
   const state = { profileStatus: 200, profiles: 0, classes: 0, scans: 0, exchanges: 0, unexpected: [] as string[] };
@@ -77,7 +77,7 @@ test('phone login restores its current route and logout removes persistent crede
   await expect(page.locator('.theme-options')).toBeVisible();
   expect(state.profiles).toBe(1);
   await page.getByRole('button', { name: '退出', exact: true }).click();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/login(?:\?|$)/);
   expect(await page.evaluate(key => localStorage.getItem(key) === null, storageKey)).toBe(true);
   await page.getByRole('tab', { name: '手机号验证码' }).click();
   await page.reload();
@@ -91,7 +91,7 @@ test('expired cached tokens return to login without loading business data or ren
   state.profileStatus = 401;
   const loadedClasses = state.classes;
   await page.reload();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/login(?:\?|$)/);
   await expect(page.getByRole('heading', { name: '登录工作台', exact: true })).toBeVisible();
   expect(state.classes).toBe(loadedClasses);
   expect(state.profiles).toBe(1);
@@ -106,7 +106,7 @@ test('temporary profile failure retains the token and offers verification retry'
   const loadedClasses = state.classes;
   const scans = state.scans;
   await page.reload();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/login(?:\?|$)/);
   await expect(page.locator('.login-session-error')).toContainText('服务暂时不可用');
   expect(await page.evaluate(key => Boolean(localStorage.getItem(key)), storageKey)).toBe(true);
   expect(state.classes).toBe(loadedClasses);

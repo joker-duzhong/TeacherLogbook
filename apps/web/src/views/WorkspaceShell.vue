@@ -12,22 +12,57 @@ const workspace = useWorkspaceStore();
 const route = useRoute();
 const router = useRouter();
 const menuOpen = ref(false);
+const navHeight = ref(window.innerHeight);
+let restorePageScroll: (() => void) | undefined;
+function updateNavViewport() {
+  navHeight.value = window.visualViewport?.height || window.innerHeight;
+  if (window.innerWidth > 760) menuOpen.value = false;
+}
+function unlockPageScroll() { restorePageScroll?.(); restorePageScroll = undefined; }
+watch(menuOpen, (open) => {
+  unlockPageScroll();
+  if (!open) return;
+  const { scrollX, scrollY } = window;
+  const body = document.body.style;
+  const root = document.documentElement.style;
+  const previous = { position: body.position, top: body.top, left: body.left, width: body.width, overflow: body.overflow };
+  const rootOverflow = root.overflow;
+  // A fixed body also locks older iOS WebViews where overflow alone does not stop touch scrolling.
+  Object.assign(body, { position: 'fixed', top: `-${scrollY}px`, left: `-${scrollX}px`, width: '100%', overflow: 'hidden' });
+  root.overflow = 'hidden';
+  restorePageScroll = () => {
+    Object.assign(body, previous);
+    root.overflow = rootOverflow;
+    window.scrollTo(scrollX, scrollY);
+  };
+}, { flush: 'sync' });
+watch(() => route.fullPath, () => { menuOpen.value = false; });
 const collapsed = ref<string[]>([]);
 const groupIcons = [LayoutDashboard, Users, BookOpen, HeartHandshake, ClipboardList, Link, Settings];
 function toggleGroup(group: string) { collapsed.value = collapsed.value.includes(group) ? collapsed.value.filter(item => item !== group) : [...collapsed.value, group]; }
 const current = computed(() => pages.find(page => page.id === route.params.page) ?? pages[0]!);
-onMounted(() => { void workspace.load(); });
-onUnmounted(() => workspace.reset());
+onMounted(() => {
+  void workspace.load();
+  updateNavViewport();
+  window.addEventListener('resize', updateNavViewport);
+  window.visualViewport?.addEventListener('resize', updateNavViewport);
+});
+onUnmounted(() => {
+  unlockPageScroll();
+  window.removeEventListener('resize', updateNavViewport);
+  window.visualViewport?.removeEventListener('resize', updateNavViewport);
+  workspace.reset();
+});
 watch(() => auth.isAuthenticated, (authenticated) => {
   if (!authenticated) { workspace.reset(); void router.replace('/login'); }
 }, { flush: 'sync' });
-async function logout() { auth.clearSession(); workspace.reset(); await router.replace('/login'); }
+async function logout() { auth.clearSession(); workspace.reset(); await router.replace({ name: 'login', query: /MicroMessenger/i.test(navigator.userAgent) ? { manual: '1' } : {} }); }
 </script>
 
 <template>
   <div class="business-app" :data-theme="workspace.skin" :style="themeVariables(workspace.skin)">
-    <button v-if="menuOpen" class="nav-backdrop" aria-label="关闭导航" @click="menuOpen = false"></button>
-    <aside class="business-nav" :class="{ open: menuOpen }">
+    <button v-if="menuOpen" type="button" class="nav-backdrop" aria-label="关闭导航" @click="menuOpen = false" @touchmove.prevent></button>
+    <aside id="workspace-navigation" class="business-nav" :class="{ open: menuOpen }" :style="{ '--nav-height': navHeight + 'px' }" @keydown.esc="menuOpen = false">
       <RouterLink to="/workspace/dashboard" class="workspace-brand"><img class="brand-logo" src="/brand/logo.png" alt="" width="44" height="44" /><div>教师台账<span>班主任工作台</span></div></RouterLink>
       <nav aria-label="工作台导航">
         <section v-for="(group, index) in groups" :key="group">
@@ -38,7 +73,7 @@ async function logout() { auth.clearSession(); workspace.reset(); await router.r
     </aside>
     <main class="business-main">
       <header class="business-topbar">
-        <button class="mobile-nav-toggle" aria-label="展开导航" title="展开导航" @click="menuOpen = !menuOpen"><Menu :size="20"/></button>
+        <button type="button" class="mobile-nav-toggle" aria-label="展开导航" title="展开导航" :aria-expanded="menuOpen" aria-controls="workspace-navigation" @click="menuOpen = !menuOpen"><Menu :size="20"/></button>
         <div><span class="business-eyebrow">{{ current.group }}</span><h1>{{ current.name }}</h1></div>
         <div class="business-account">
           <el-select :model-value="workspace.classId" aria-label="当前班级" placeholder="选择班级" :disabled="workspace.busy" @change="workspace.selectClass"><el-option v-for="item in workspace.classes" :key="item.id" :label="item.name" :value="item.id" /></el-select>

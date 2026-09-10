@@ -5,7 +5,7 @@ import { buildScanUrl, createScanLogin, resolveScanPageUrl } from './scan-login'
 type Api = ReturnType<typeof createApi>;
 const transactionId = '00000000-0000-4000-8000-000000000001';
 const session: ScanSession = { transaction_id: transactionId, status: 'WAITING_SCAN', poll_token: 'fixture-poll-token-000000000000000000', poll_interval_seconds: 2, expires_at: '2026-09-09T00:05:00Z' };
-const login = { access_token: 'fixture-access', refresh_token: 'fixture-refresh', user: { id: 'user-id', needs_phone_binding: false } } as LoginResult;
+const login = { access_token: 'fixture-access', refresh_token: 'fixture-refresh', app_scope: 'hope_teacher_logbook', user: { id: 'user-id', needs_phone_binding: false } } as LoginResult;
 
 function deferred<Value>() {
   let resolve!: (value: Value) => void;
@@ -193,16 +193,15 @@ describe('scan login lifecycle', () => {
   });
 });
 
-describe('scan URL environment', () => {
-  it('selects local passport scan in development and the public passport in production', () => {
-    expect(buildScanUrl(resolveScanPageUrl(undefined, true), transactionId)).toBe(`http://192.168.31.93:5173/passport/scan?transaction_id=${transactionId}&env=local`);
-    expect(buildScanUrl(resolveScanPageUrl(undefined, false), transactionId)).toBe(`https://tool.lxyy.fun/passport/scan?transaction_id=${transactionId}`);
-    expect(resolveScanPageUrl('', false)).toBe('https://tool.lxyy.fun/passport/scan');
+describe('scan URL configuration', () => {
+  it('never substitutes a hardcoded address when configuration is missing', () => {
+    expect(resolveScanPageUrl(undefined)).toBe('');
+    expect(() => buildScanUrl(resolveScanPageUrl(''), transactionId)).toThrow();
   });
-  it.each([true, false])('keeps explicit configuration first (development=%s)', (development) => {
+  it('uses the configured URL without selecting addresses by build mode', () => {
     const configured = 'https://example.test/passport/scan?env=local';
-    expect(resolveScanPageUrl(configured, development)).toBe(configured);
-    expect(buildScanUrl(resolveScanPageUrl(configured, development), transactionId)).toBe(`https://example.test/passport/scan?transaction_id=${transactionId}&env=local`);
+    expect(resolveScanPageUrl(' ' + configured + ' ')).toBe(configured);
+    expect(buildScanUrl(resolveScanPageUrl(configured), transactionId)).toBe(`https://example.test/passport/scan?transaction_id=${transactionId}&env=local`);
   });
   it('leaves production URLs without an environment parameter', () => {
     expect(buildScanUrl('https://tool.lxyy.fun/passport/scan', transactionId)).toBe(`https://tool.lxyy.fun/passport/scan?transaction_id=${transactionId}`);

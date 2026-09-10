@@ -4,7 +4,7 @@
 
 ## 当前功能
 
-- 网页端：桌面微信扫码默认优先、移动网页仅手机号登录；支持登录态持久化、刷新恢复、路由守卫及完整工作台。
+- 网页端：桌面微信扫码默认优先、普通移动网页手机号登录、微信内自动前往 Passport 并在确认后返回；支持登录态持久化、刷新恢复、路由守卫及完整工作台。
 - PC 微信扫码：真实创建会话、二维码生成、状态轮询与一次性凭据兑换；支持已扫码、取消、过期、失败及刷新。
 - 两端均提供 7 组导航、39 个业务视图、19 类记录的增删改查，包含学生、班委、卫生、活动、收支、考试、奖惩、作业、课程、请假、违纪、预警、谈话、家校联系、工作、培训、待办和网址。
 - 班级总览、统计看板、排座位、班级管理、CSV 导入导出、备份恢复及旧版 JSON 迁移均已接入 API，不向运行中的应用注入模拟业务数据。
@@ -41,14 +41,14 @@ PC 开发入口为 `http://127.0.0.1:5174`。默认将 `/api` 代理到 `http://
 
 环境配置位于 `apps/web/`：`npm run dev:web` 读取 `.env.development`，`npm run build:web` 读取 `.env.production`；两份配置已在当前工作区填写。它们按仓库现有规则被 Git 忽略，更换电脑或 CI 打包时需另行提供。
 
-两份配置中的 API 前缀均为 `/api/v1`、扫码业务标识均为 `hope_teacher_logbook`。本地配置代理到 `http://192.168.31.93:8000`，扫码页面使用本地 passport 地址并附带 `env=local`；线上配置使用正式 passport 地址，由网站服务器将 `/api/` 代理到真实后端。
+各环境分别提供 API 前缀及 Passport 地址，台账业务标识为 `hope_teacher_logbook`。本地授权中心入口附带 `env=local`，正式入口不附加环境参数。API 使用同源 `/api/v1` 时由网站服务器代理到真实后端；使用独立 API 域名时需配置相应 CORS。
 
 按模式配置优先于通用 `.env`；已有 shell 环境变量及对应的 `.env.development.local` / `.env.production.local` 可覆盖它们。环境文件在构建时读取，修改线上配置后需要重新打包，只上传 `dist/` 内容，不上传环境文件。配置项如下：
 
 - `VITE_API_BASE_URL`：公开的 API 前缀，默认 `/api/v1`。
 - `API_PROXY_TARGET`：仅供 Vite 开发代理使用，默认 `http://192.168.31.93:8000`。
-- `VITE_SCAN_APP_KEY`：扫码业务标识，默认 `hope_teacher_logbook`，不是微信 AppID。
-- `VITE_SCAN_PAGE_URL`：独立手机扫码页面，示例配置留空以使用环境默认值。本地开发使用 `http://192.168.31.93:5173/passport/scan?env=local`，正式构建使用 `https://tool.lxyy.fun/passport/scan` 且不附加 `env`；显式配置仍优先。二维码追加后端真实 `transaction_id`，本地额外保留 `env=local`。仅允许一个 `env=local` 查询参数，不接受其他参数、片段或用户名密码；已有自定义配置需要自行同步到新路径。
+- `VITE_SCAN_APP_KEY`：桌面扫码业务标识，默认 `hope_teacher_logbook`，须与台账登录范围一致，不是微信 AppID。
+- `VITE_SCAN_PAGE_URL`：必填的授权中心扫码页面地址，由环境配置提供；业务代码不再按开发/正式模式选择硬编码地址。可配置本地 Passport 的 `/passport/scan?env=local` 或线上 Passport 的 `/passport/scan`。基础配置仅允许一个 `env=local` 查询参数，不接受其他参数、片段或用户名密码。事务 ID 和完整 `back` 在发起登录时动态生成，勿预填到配置中；缺失配置会明确报错。
 
 生产部署应将 PC 的 `dist/` 作为静态站点部署，对 `/api` 配置后端反向代理，并对前端路由配置回退到 `index.html`。Vite 开发代理不会自动出现在生产环境中。
 
@@ -69,10 +69,18 @@ AppSecret 和服务端凭据必须由后端环境管理，不能放进任何 `VI
 
 ## 登录行为
 
+- 微信内置浏览器自动走 Passport 授权往返：台账创建扫码事务，在当前标签页的 sessionStorage 暂存事务、poll_token、随机 state、原工作台路径及过期时间，然后进入授权中心。用户确认后自动回到 `/auth/passport/callback`，校验本地上下文、查询状态并一次性兑换台账 Token，恢复原页面并清除临时事务。
+- 台账用当前 `window.location.origin` 加 `/auth/passport/callback` 生成完整返回地址，并将事务 ID 和随机 state 放在其 fragment 中，通过 `URLSearchParams` 编码为授权中心 URL 的单个 `back` 参数。Passport 校验域名后返回该完整地址，不拼接或限定台账路径。Token、poll_token、exchange_code 不进入网址。正式服务器须让回调路径回退到 Web 的 index.html。
+- 发布时先更新 HopePassport，再更新台账 Web；旧版授权中心不会自动返回应用。两项目各自重新构建部署，本次无需修改后端接口。
+- Passport 的域名白名单放行 `lxyy.fun` 及其子域名，以及 localhost、回环、私有和链路本地 IP；域名使用 HTTPS，本地允许 HTTP，不限制端口、路径、查询参数和片段。更换本地 IP/端口无需修改回跳代码。手机真机可用 `npm run dev:web -- --host 0.0.0.0` 启动，再从电脑的可达局域网地址访问；手机上的 localhost 不是开发电脑。
+- `back` 只决定返回地址；授权中心 API 仍由现有环境配置及入口 `env=local` 决定。有 `back` 时采用入口的显式环境选择，不继承以前缓存的本地环境；无 `back` 的普通扫码沿用原规则。公众号授权域名、OAuth 回调地址与 API 配置须匹配，局域网访问仍需满足微信平台的授权要求。
+- 微信内台账只保留授权中心登录入口，失败可重新授权，主动退出后停留在登录按钮，不自动循环登录；旧 `method=phone` 链接也不会显示短信表单。首次手机号绑定及授权中心自己的账号恢复仍在 Passport 完成。普通移动浏览器保留短信登录，桌面保留扫码及短信登录。
+- 台账前往 Passport、Passport 发起 OAuth、确认后的结果与返回均使用 replace，避免本次受控跳转新增历史记录。回跳事务绑定发起源地址、授权中心配置和随机 state；同一标签页返回或刷新不会重复兑换，兑换响应丢失须重新发起授权。
 - 手机号验证码登录使用现有 `/auth/sms/send` 和 `/auth/phone/login`；验证码按契约为四位数字。
+- 台账手机号登录携带 `app_key=hope_teacher_logbook`，扫码/回跳兑换返回同一 `app_scope`；Web 接受新登录时验证所属应用，不使用 Passport Token 访问台账接口。
 - 只有用户点击获取验证码或登录才会触发请求；后端说明未注册手机号验证后会自动创建账号。
 - 发送成功后的 60 秒是前端防重复点击间隔，不代表后端承诺的验证码有效期或限流规则。
-- 默认选中第一个“微信扫码”标签：先查询 `/auth/scan/apps` 确认应用可用，再向 `/auth/scan/sessions` 提交业务 app_key。
+- 桌面普通浏览器默认选中第一个“微信扫码”标签：先查询 `/auth/scan/apps` 确认应用可用，再向 `/auth/scan/sessions` 提交业务 app_key。
 - 二维码在浏览器内生成，内容为扫码页面地址加真实 `transaction_id`；本地配置额外保留 `&env=local`，未指定环境时不附加 `env`，由手机页面使用正式环境。环境缓存由手机扫码页面负责，PC 不新增缓存，也不使用第三方二维码生成服务。
 - 按后端 `poll_interval_seconds` 串行轮询 `/auth/scan/sessions/{transaction_id}`，poll_token 仅通过 `X-Scan-Token` 请求头传递；确认后向 `/auth/scan/exchange` 一次性兑换，并复用现有登录态与工作台跳转。
 - 切换手机号、刷新二维码或离开页面会清理定时器和当前会话引用；已发出的请求可能完成，但旧响应不会兑换或覆盖新登录。兑换网络失败不自动重试，避免重复消费。
@@ -111,6 +119,7 @@ npm run build:miniapp
 
 - `npm test`：隔离测试登录验证、响应封装、401 / 422、分页、双端传输、扫码契约和轮询竞态，不访问真实后端。
 - `npm run test:web`：先启动 `npm run dev:web`，使用本机 Edge 运行页面、表单、皮肤、座位、文件和会话失效回归；所有 API 响应仅在测试浏览器内隔离替换，不调用真实业务写接口。可通过 `WEB_TEST_URL` 指定其他本地端口。
+- `tests/web/passport.spec.ts` 跨项目回归还要求 HopePassport 的 5173 开发服务及两个项目的最新生产构建；默认读取相邻的 `../HopePassport`，也可用 `PASSPORT_TEST_DIR` 指定该项目路径。正式域名页面由测试浏览器使用本地产物响应，微信/OAuth/短信/API 全部隔离，不访问正式账号。可用 `npm run test:web -- tests/web/passport.spec.ts` 单独执行。
 - `npm run test:legacy`：保留原版 11 项测试。
 - `npm run typecheck`：检查共享包和双端 TypeScript。
 - 两个 build 命令分别验证 PC 和微信小程序产物。编译成功不能代替真机登录与域名验证。

@@ -45,7 +45,7 @@ describe('scan API contract', () => {
     await expect(setup({ transaction_id: transactionId, status: 'CONFIRMED' }).api.pollScanSession(transactionId, pollToken)).rejects.toThrow('不完整');
   });
   it('exchanges once without adding bearer authentication', async () => {
-    const login = { access_token: 'fixture-access', refresh_token: 'fixture-refresh', user: { id: 'user-id', needs_phone_binding: false } };
+    const login = { access_token: 'fixture-access', refresh_token: 'fixture-refresh', app_scope: 'hope_teacher_logbook', user: { id: 'user-id', needs_phone_binding: false } };
     const { api, transport } = setup(login);
     expect(await api.exchangeScanSession(transactionId, exchangeCode, pollToken)).toEqual(login);
     expect(transport.mock.calls[0]?.[0]).toEqual({ url: '/api/v1/auth/scan/exchange', method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-Scan-Token': pollToken }, body: { transaction_id: transactionId, exchange_code: exchangeCode } });

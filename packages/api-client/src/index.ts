@@ -95,7 +95,8 @@ function requireTokens(value: unknown): TokenResult {
 function requireLogin(value: unknown): LoginResult {
   const tokens = requireTokens(value);
   assertRecord(value);
-  return { ...tokens, user: requireUser(value.user) };
+  if (typeof value.app_scope !== 'string' || !value.app_scope) throw new ApiError('登录响应缺少应用范围，请重新登录。');
+  return { ...tokens, user: requireUser(value.user), app_scope: value.app_scope };
 }
 
 function requireClass(value: unknown): ClassRecord {

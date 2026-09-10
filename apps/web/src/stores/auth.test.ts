@@ -4,7 +4,7 @@ import type { LoginResult } from '@teacher-logbook/api-client';
 import { authStorageKey, useAuthStore } from './auth';
 
 const profile = { id: 'fixture-user', needs_phone_binding: false };
-const login = { access_token: 'fixture-access', refresh_token: 'fixture-refresh', token_type: 'bearer', user: profile } as LoginResult;
+const login = { access_token: 'fixture-access', refresh_token: 'fixture-refresh', app_scope: 'hope_teacher_logbook', token_type: 'bearer', user: profile } as LoginResult;
 let values: Map<string, string>;
 let storage: { getItem: ReturnType<typeof vi.fn>; setItem: ReturnType<typeof vi.fn>; removeItem: ReturnType<typeof vi.fn> };
 let fetcher: ReturnType<typeof vi.fn<typeof fetch>>;
@@ -29,6 +29,12 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('persistent web authentication', () => {
+  it('refuses Passport or other application tokens before persisting them', () => {
+    const auth = newStore();
+    expect(() => auth.acceptLogin({ ...login, app_scope: 'passport' })).toThrow('所属应用不匹配');
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(auth.isAuthenticated).toBe(false);
+  });
   it('stores only the access token when either login flow is accepted', () => {
     const auth = newStore();
     auth.acceptLogin(login);

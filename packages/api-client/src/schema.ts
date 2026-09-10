@@ -1075,13 +1075,17 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        SendSmsRequest: {
+        SendSmsCodeRequest: {
             phone: string;
+            test?: string | null;
         };
-        ResponseModel: {
+        ResponseModel_SmsCodeResponse_: {
             code: number;
             message: string;
-            data?: unknown | null;
+            data?: components["schemas"]["SmsCodeResponse"] | null;
+        };
+        SmsCodeResponse: {
+            code: string;
         };
         HTTPValidationError: {
             detail?: components["schemas"]["ValidationError"][];
@@ -1096,6 +1100,7 @@ export interface components {
         PhoneLoginRequest: {
             phone: string;
             code: string;
+            app_key?: string | null;
         };
         ResponseModel_LoginResponse_: {
             code: number;
@@ -1107,6 +1112,7 @@ export interface components {
             refresh_token: string;
             token_type: string;
             user: components["schemas"]["UserResponse"];
+            app_scope: string;
         };
         UserResponse: {
             nickname?: string | null;
@@ -1141,6 +1147,7 @@ export interface components {
             id: string;
             name: string;
             code: string;
+            scope?: string | null;
         };
         BindPhoneRequest: {
             phone: string;
@@ -2110,7 +2117,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SendSmsRequest"];
+                "application/json": components["schemas"]["SendSmsCodeRequest"];
             };
         };
         responses: {
@@ -2119,7 +2126,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ResponseModel"];
+                    "application/json": components["schemas"]["ResponseModel_SmsCodeResponse_"];
                 };
             };
             422: {

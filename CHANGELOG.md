@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-09-11 · 移动端侧栏关闭与触摸滚动修复
+
+- 排查发现侧栏高度仅使用 100dvh、遮罩定位仅使用 inset，缺少旧 WebView 的兼容处理；触摸实验确认展开侧栏后滑动右侧会滚动背景，屏蔽 inset 支持后右侧空白无法命中遮罩。
+- 遮罩改为显式四边定位和完整宽高，点击右侧关闭，阻止遮罩上的触摸滑动；侧栏增加高度回退并跟随实际可视高度，设置独立纵向触摸滚动与底部安全区，窄屏保留至少 48px 的外部关闭区域。
+- 展开时固定背景并保存滚动位置；关闭、路由变化、切回桌面和组件卸载时恢复，避免留下页面无法滚动的状态。导航开关补充 aria-expanded 与 aria-controls，侧栏支持 Escape 关闭。
+- 验证：4 项新增触摸回归及 5 项既有回归均通过，覆盖 390×844、320×568、640×360、无 dvh/inset 的兼容模拟、滑动到最后一个导航项、点击遮罩、背景锁定、位置恢复、桌面切换、退出清理、所有导航页面、四套皮肤以及本地/正式登录往返；Web 类型检查和生产构建通过。核对三种尺寸的侧栏及桌面/手机截图；浏览器为 Edge 触摸模拟，未做微信真机验收。
+- UI 检测仅提示原有课程卡片和座位分隔线的粗边框样式，本次未修改这些视觉样式；保留既有构建大包提示。
+- 本轮文件：`apps/web/src/views/WorkspaceShell.vue`、`apps/web/src/views/workspace.css`、`tests/web/workspace.spec.ts`、`CHANGELOG.md`。
+
+## 2026-09-11 · 微信内 Passport 登录、完整 back 与历史记录修复
+
+- 微信内台账仅通过授权中心登录，自动发起扫码事务并保留 Passport 的一次显式确认；首次绑定在授权中心完成。移除台账短信表单及回退入口，失败提供重新授权，主动退出停留在授权登录按钮，旧 method=phone 链接不能绕过。
+- 用当前网页 origin 动态生成完整 back，含本地随机 state 和事务 ID 的 fragment；Passport 按域名放行，不限定回调路径或端口。授权中心地址只取环境配置，移除开发/正式地址硬编码兜底，缺失配置明确提示。
+- sessionStorage 暂存有期限的事务，绑定发起源地址、授权中心配置及随机 state；不把 Token、poll_token 或 exchange_code 放入 URL。回调校验后查询真实状态并一次性兑换，拒绝伪造、过期、重复回调及其他应用 Token，兑换结果不明不重放。
+- 定位到台账进入 Passport 和 Passport 发起 OAuth 的 assign 会累积历史项，改为 replace；结果页及返回应用也使用 replace，浏览器回退不再进入本次受控授权中间页。
+- 同步后端 app_key/app_scope 类型，普通浏览器短信登录明确申请台账范围；桌面扫码与普通移动浏览器短信保留。
+- 验证：126 项单元测试、Web 类型检查和生产构建通过；35 项完整 Web 浏览器回归一次性通过，其中 9 项跨项目用例覆盖本地/正式、回退/前进、首次绑定、Passport 短信恢复、自定义域名端口路径参数、错误地址、应用错配、兑换异常与微信内唯一入口；其余覆盖班级、19 类记录、座位、导入恢复、响应式与登录持久化。测试使用隔离 API 与模拟微信回调，未发布、未使用真实账号或发送短信；微信真机及实际服务器部署另行验收。保留既有构建大包提示。
+- 发布顺序：HopePassport → 台账 Web，服务器保留 SPA 回调回退；无需修改后端接口。
+
+本次修改文件：
+
+- `apps/web/src/lib/passport-login.ts`、`apps/web/src/lib/passport-login.test.ts`、`apps/web/src/lib/scan-login.ts`、`apps/web/src/lib/scan-login.test.ts`
+- `apps/web/src/router.ts`、`apps/web/src/stores/auth.ts`、`apps/web/src/stores/auth.test.ts`
+- `apps/web/src/views/LoginView.vue`、`apps/web/src/views/ScanLogin.vue`、`apps/web/src/views/PassportCallbackView.vue`、`apps/web/src/views/WorkspaceShell.vue`
+- `packages/api-client/src/index.ts`、`packages/api-client/src/index.test.ts`、`packages/api-client/src/scan.test.ts`、`packages/api-client/src/schema.ts`
+- `tests/web/auth.spec.ts`、`tests/web/workspace.spec.ts`、`tests/web/passport.spec.ts`
+- `README.md`、`CHANGELOG.md`
+
 ## 2026-09-10 · 接入小鸟 Logo 与浏览器图标
 
 - 使用根目录 logo.jpeg 制作页面透明 PNG，裁去多余外围留白，保留小鸟原有金棕色和内部米白色图案；登录页页头、工作台侧栏接入同一资源，设置明确尺寸并按比例显示，适配移动端。

@@ -28,7 +28,7 @@ async function fixture(page: Page, empty = false) {
     const method = request.method();
     const reply = (data: unknown, status = 200) => route.fulfill({ status, json: { code: 200, data } });
     if (path.endsWith('/auth/scan/apps')) return reply([]);
-    if (path.endsWith('/auth/phone/login')) return reply({ access_token: 'fixture-access', refresh_token: 'fixture-refresh', token_type: 'bearer', user: { id: studentId, needs_phone_binding: false } });
+    if (path.endsWith('/auth/phone/login')) return reply({ access_token: 'fixture-access', refresh_token: 'fixture-refresh', app_scope: 'hope_teacher_logbook', token_type: 'bearer', user: { id: studentId, needs_phone_binding: false } });
     if (state.expired) return route.fulfill({ status: 401, json: { detail: 'expired' } });
     if (path.endsWith('/auth/me')) return reply({ id: studentId, needs_phone_binding: false });
     if (path.endsWith('/preferences/ui')) {
@@ -117,6 +117,89 @@ async function navigate(page: Page, id: string) {
   await expect(page.locator('.business-topbar h1')).toHaveText(pages.find(item => item.id === id)!.name);
   await expect(page.locator('.business-empty[role=status]')).toHaveCount(0);
 }
+
+test.describe('mobile navigation drawer', () => {
+  test.use({ hasTouch: true });
+
+  async function swipeUp(page: Page, x: number, height: number) {
+    const session = await page.context().newCDPSession(page);
+    const start = Math.floor(height * .8);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: start }] });
+    for (let step = 1; step <= 8; step++) {
+      await session.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: start - Math.floor(height * .55 * step / 8) }] });
+      await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
+    }
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await session.detach();
+  }
+
+  for (const variant of [
+    { width: 390, height: 844, legacy: false },
+    { width: 320, height: 568, legacy: false },
+    { width: 640, height: 360, legacy: true },
+  ]) {
+    test(`outside tap and touch scrolling at ${variant.width}x${variant.height}, legacy CSS=${variant.legacy}`, async ({ page }, testInfo) => {
+      await page.setViewportSize(variant);
+      if (variant.legacy) {
+        await page.route('**/src/views/workspace.css*', async route => {
+          const response = await route.fetch();
+          const body = (await response.text()).replace(/(?:min-|max-)?height\s*:\s*100dvh\s*;?/g, '').replace(/inset\s*:\s*0\s*;?/g, '');
+          await route.fulfill({ response, body });
+        });
+      }
+      const state = await fixture(page);
+      const toggle = page.getByRole('button', { name: '展开导航', exact: true });
+      const drawer = page.locator('.business-nav');
+      await toggle.tap();
+      const right = variant.width - 20;
+      expect(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.classList.contains('nav-backdrop'), { x: right, y: variant.height / 2 })).toBe(true);
+      expect(await drawer.evaluate(element => element.scrollHeight > element.clientHeight && element.clientHeight <= innerHeight)).toBe(true);
+      await swipeUp(page, 120, variant.height);
+      await expect.poll(() => drawer.evaluate(element => element.scrollTop)).toBeGreaterThan(50);
+      await swipeUp(page, right, variant.height);
+      expect(await page.evaluate(() => scrollY)).toBe(0);
+      await page.screenshot({ path: testInfo.outputPath('drawer.png') });
+      await page.touchscreen.tap(right, Math.floor(variant.height / 2));
+      await expect(drawer).not.toHaveClass(/open/);
+      await expect(page.locator('.nav-backdrop')).toHaveCount(0);
+      expect(await page.evaluate(() => document.body.style.position)).not.toBe('fixed');
+
+      await toggle.tap();
+      const lastLink = drawer.locator('nav a').last();
+      for (let attempt = 0; attempt < 12; attempt++) {
+        const bounds = await lastLink.boundingBox();
+        if (bounds && bounds.y >= 0 && bounds.y + bounds.height < variant.height) break;
+        await swipeUp(page, 120, variant.height);
+      }
+      await expect(lastLink).toBeInViewport();
+      await lastLink.tap();
+      await expect(drawer).not.toHaveClass(/open/);
+      expect(await page.evaluate(() => document.body.style.position)).not.toBe('fixed');
+      expect(state.errors).toEqual([]);
+    });
+  }
+
+  test('restores page scroll on close and releases the lock on desktop resize and logout', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 568 });
+    await fixture(page);
+    await page.evaluate(() => scrollTo(0, 100));
+    const before = await page.evaluate(() => scrollY);
+    // Keep the original scroll position: tapping a scrolled-out toggle would scroll it into view.
+    await page.getByRole('button', { name: '展开导航', exact: true }).dispatchEvent('click');
+    await expect.poll(() => page.evaluate(() => document.body.style.position)).toBe('fixed');
+    await page.touchscreen.tap(370, 300);
+    await expect.poll(() => page.evaluate(() => scrollY)).toBe(before);
+    await page.getByRole('button', { name: '展开导航', exact: true }).dispatchEvent('click');
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect(page.locator('.nav-backdrop')).toHaveCount(0);
+    expect(await page.evaluate(() => document.body.style.position)).not.toBe('fixed');
+    await page.setViewportSize({ width: 390, height: 568 });
+    await page.getByRole('button', { name: '展开导航', exact: true }).tap();
+    await page.getByRole('button', { name: '退出', exact: true }).dispatchEvent('click');
+    await expect(page).toHaveURL(/\/login/);
+    expect(await page.evaluate(() => document.body.style.position)).not.toBe('fixed');
+  });
+});
 
 test('desktop: every migrated page and all four skins render', async ({ page }, testInfo) => {
   const state = await fixture(page);

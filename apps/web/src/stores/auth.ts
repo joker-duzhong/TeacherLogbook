@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { ApiError, createApi } from '@teacher-logbook/api-client';
 import type { LoginResult, UserRecord } from '@teacher-logbook/api-client';
 import { createWebTransport } from '../lib/transport';
+import { logbookAppKey } from '../lib/passport-login';
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 export const authStorageKey = `teacher-logbook:access-token:${baseUrl}`;
@@ -31,6 +32,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
   function acceptLogin(result: LoginResult) {
+    if (result.app_scope !== logbookAppKey) throw new ApiError('登录凭据所属应用不匹配，请重新登录。');
     try {
       localStorage.setItem(authStorageKey, result.access_token);
     } catch {
