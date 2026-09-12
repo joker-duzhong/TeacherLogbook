@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from "@/components/AppButton.vue";
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
@@ -29,7 +30,7 @@ function restart() { try { passport.clear(); } catch { /* The login page also ch
       <h1>{{ error ? '微信登录未完成' : '正在完成登录…' }}</h1>
       <p v-if="error" class="error-message" role="alert">{{ error }}</p>
       <p v-else role="status">正在返回班主任工作台</p>
-      <el-button v-if="error" type="primary" @click="restart">返回登录页</el-button>
+      <AppButton v-if="error" variant="default" @click="restart">返回登录页</AppButton>
     </section>
   </main>
 </template>

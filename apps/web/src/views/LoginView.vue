@@ -1,9 +1,15 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { webThemeVariables } from '@/lib/theme';
+import { Users, NotebookPen, MessagesSquare, ArrowRight } from '@lucide/vue';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@teacher-logbook/api-client';
 import type { LoginResult } from '@teacher-logbook/api-client';
-import { getRemainingSeconds, isValidPhone, isValidSmsCode, normalizePhone, themes, themeVariables } from '@teacher-logbook/shared';
+import { getRemainingSeconds, isValidPhone, isValidSmsCode, normalizePhone, themes } from '@teacher-logbook/shared';
 import { Check, Palette } from '@lucide/vue';
 import { useAuthStore } from '../stores/auth';
 import ScanLogin from './ScanLogin.vue';
@@ -122,77 +128,28 @@ async function login() {
 </script>
 
 <template>
-  <main class="login-page" :data-theme="loginTheme" :style="themeVariables(loginTheme)">
-    <header class="site-header">
-      <a class="brand" href="/login" aria-label="教师台账登录首页"><img class="brand-logo" src="/brand/logo.png" alt="" width="48" height="48" />教师台账<span>班主任工作台</span></a>
-      <el-popover v-model:visible="themeMenuOpen" trigger="click" placement="bottom-end" :width="208" :teleported="false">
-        <template #reference>
-          <button class="login-theme-trigger" type="button" aria-label="切换主题" title="切换主题" :aria-expanded="themeMenuOpen" aria-controls="login-theme-options">
-            <Palette :size="20" aria-hidden="true" />
-          </button>
-        </template>
-        <div id="login-theme-options" class="login-theme-options" role="group" aria-label="登录页主题">
-          <button v-for="theme in themes" :key="theme.id" type="button" :aria-pressed="loginTheme === theme.id" @click="loginTheme = theme.id; themeMenuOpen = false">
-            <span class="login-theme-swatch" :style="{ background: theme.paper, borderColor: theme.line }" aria-hidden="true"><i :style="{ background: theme.brand }"></i><i :style="{ background: theme.accent }"></i></span>
-            <span>{{ theme.name }}</span><Check v-if="loginTheme === theme.id" :size="16" aria-hidden="true" />
-          </button>
-        </div>
-      </el-popover>
+  <main class="login-page" :data-theme="loginTheme" :style="webThemeVariables(loginTheme)">
+    <header class="site-header"><a class="brand" href="/login"><img class="brand-logo" src="/brand/logo.png" alt="" width="40" height="40"/><span>教师台账<small>班主任工作台</small></span></a>
+      <Popover v-model:open="themeMenuOpen"><PopoverTrigger as-child><AppButton size="icon" variant="ghost" aria-label="切换主题"><Palette :size="20"/></AppButton></PopoverTrigger><PopoverContent align="end" class="w-56"><div id="login-theme-options" class="login-theme-options" role="group" aria-label="登录页主题"><button v-for="theme in themes" :key="theme.id" :aria-pressed="loginTheme===theme.id" @click="loginTheme=theme.id;themeMenuOpen=false"><i :style="{background:theme.brand}"></i>{{ theme.name }}<Check v-if="loginTheme===theme.id" :size="16"/></button></div></PopoverContent></Popover>
     </header>
-
     <div class="login-layout">
-      <section class="login-intro" aria-labelledby="intro-title">
-        <h1 id="intro-title">把班级事务记清楚，<br />把时间留给学生。</h1>
-        <p class="intro-copy">学生信息、日常记录与班主任工作，<br class="desktop-break" />从这里开始有序管理。</p>
-        <div class="intro-notes" aria-label="工作台功能范围">
-          <div><span>班级管理</span><p>花名册、班委与座位安排</p></div>
-          <div><span>日常记录</span><p>请假、作业与学生关怀</p></div>
-          <div><span>班主任工作</span><p>沟通、培训与待办事项</p></div>
-        </div>
+      <section class="login-intro"><div class="intro-mark"><NotebookPen :size="24"/><span>每一天，都值得认真记录</span></div><h1>把班级事务记清楚，<br/>把时间留给学生。</h1><p class="intro-copy">学生信息、日常记录与班主任工作，<br/>从这里开始有序管理。</p>
+        <div class="intro-notes"><div><Users/><span><strong>班级管理</strong><small>花名册、班委与座位安排</small></span></div><div><NotebookPen/><span><strong>日常记录</strong><small>请假、作业与学生关怀</small></span></div><div><MessagesSquare/><span><strong>班主任工作</strong><small>沟通、培训与待办事项</small></span></div></div>
       </section>
-
-      <section class="login-panel" aria-labelledby="login-title">
-        <h2 id="login-title">登录工作台</h2>
-        <p class="panel-description">使用你的账号，继续班级工作。</p>
-        <div v-if="auth.restoreError || auth.storageError" class="login-session-error" role="alert">
-          <p class="error-message">{{ auth.restoreError || auth.storageError }}</p>
-          <el-button v-if="auth.restoreError" native-type="button" :loading="auth.restoring" :disabled="submitting || sending" @click="retrySession">重新验证登录</el-button>
-        </div>
-        <div v-if="inWechat" class="wechat-login" :aria-busy="passportBusy">
-          <p v-if="passportBusy" role="status">正在前往授权中心…</p>
-          <p v-if="passportError" class="error-message" role="alert">{{ passportError }}</p>
-          <el-button v-if="!passportBusy" type="primary" :disabled="!!auth.restoreError" @click="startPassport(true)">{{ passportError ? '重新授权' : '前往授权中心登录' }}</el-button>
-        </div>
-        <el-tabs v-else v-model="loginMethod" stretch class="login-tabs" :class="{ 'phone-only': isMobile || inWechat }">
-          <el-tab-pane v-if="!isMobile && !inWechat" label="微信扫码" name="wechat" :disabled="submitting || sending">
-            <ScanLogin v-if="loginMethod === 'wechat' && !auth.restoreError && !auth.restoring" @login="completeLogin" />
-          </el-tab-pane>
-          <el-tab-pane label="手机号验证码" name="phone">
-            <el-form label-position="top" class="login-form" @submit.prevent="login">
-              <el-form-item label="手机号" prop="phone" :error="fieldErrors.phone" for="phone">
-                <el-input id="phone" v-model="form.phone" type="tel" inputmode="tel" autocomplete="tel"
-                  placeholder="请输入手机号" :maxlength="20" :disabled="submitting || sending"
-                  @input="fieldErrors.phone = ''" />
-              </el-form-item>
-              <el-form-item label="验证码" prop="code" :error="fieldErrors.code" for="sms-code">
-                <div class="code-input-row">
-                  <el-input id="sms-code" v-model="form.code" inputmode="numeric" autocomplete="one-time-code"
-                    placeholder="4 位数字" :maxlength="4" :disabled="submitting" @input="fieldErrors.code = ''" />
-                  <el-button native-type="button" :loading="sending" :disabled="countdown > 0 || submitting" @click="sendSms">
-                    {{ countdown > 0 ? countdown + ' 秒后重发' : '获取验证码' }}
-                  </el-button>
-                </div>
-              </el-form-item>
-              <div class="form-feedback">
-                <p v-if="errorMessage" class="error-message" role="alert">{{ errorMessage }}</p>
-                <p v-else-if="successMessage" class="success-message" role="status">{{ successMessage }}</p>
-              </div>
-              <el-button class="login-submit" type="primary" native-type="submit" :loading="submitting" :disabled="sending">登录工作台</el-button>
-              <p class="login-hint">未注册的手机号验证通过后，将自动创建账号。</p>
-            </el-form>
-          </el-tab-pane>
-        </el-tabs>
+      <section class="login-panel"><h2>登录工作台</h2><p class="panel-description">使用你的账号，继续班级工作。</p>
+        <div v-if="auth.restoreError||auth.storageError" class="login-session-error" role="alert"><p class="error-message">{{ auth.restoreError||auth.storageError }}</p><AppButton v-if="auth.restoreError" :loading="auth.restoring" :disabled="submitting||sending" @click="retrySession">重新验证登录</AppButton></div>
+        <div v-if="inWechat" class="wechat-login" :aria-busy="passportBusy"><p v-if="passportBusy" role="status">正在前往授权中心…</p><p v-if="passportError" class="error-message" role="alert">{{ passportError }}</p><AppButton v-if="!passportBusy" variant="default" :disabled="!!auth.restoreError" @click="startPassport(true)">{{ passportError?'重新授权':'前往授权中心登录' }}<ArrowRight :size="16"/></AppButton></div>
+        <Tabs v-else v-model="loginMethod" class="login-tabs">
+          <TabsList v-if="!isMobile" class="login-tab-list"><TabsTrigger value="wechat" :disabled="submitting||sending">微信扫码</TabsTrigger><TabsTrigger value="phone">手机号验证码</TabsTrigger></TabsList>
+          <TabsContent v-if="!isMobile" value="wechat"><ScanLogin v-if="loginMethod==='wechat'&&!auth.restoreError&&!auth.restoring" @login="completeLogin"/></TabsContent>
+          <TabsContent value="phone" force-mount v-show="loginMethod==='phone'"><form class="login-form" @submit.prevent="login">
+            <label class="form-field" for="phone"><span>手机号</span><Input id="phone" v-model="form.phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="请输入手机号" :maxlength="20" :disabled="submitting||sending" :aria-invalid="!!fieldErrors.phone" aria-describedby="phone-error" @input="fieldErrors.phone=''"/><small id="phone-error" class="field-error">{{ fieldErrors.phone }}</small></label>
+            <div class="form-field"><label for="sms-code">验证码</label><div class="code-input-row"><Input id="sms-code" v-model="form.code" inputmode="numeric" autocomplete="one-time-code" placeholder="4 位数字" :maxlength="4" :disabled="submitting" :aria-invalid="!!fieldErrors.code" aria-describedby="code-error" @input="fieldErrors.code=''"/><AppButton :loading="sending" :disabled="countdown>0||submitting" @click="sendSms">{{ countdown>0?countdown+' 秒后重发':'获取验证码' }}</AppButton></div><small id="code-error" class="field-error">{{ fieldErrors.code }}</small></div>
+            <div class="form-feedback"><p v-if="errorMessage" class="error-message" role="alert">{{ errorMessage }}</p><p v-else-if="successMessage" class="success-message" role="status">{{ successMessage }}</p></div>
+            <AppButton class="login-submit" variant="default" type="submit" :loading="submitting" :disabled="sending">登录工作台<ArrowRight :size="16"/></AppButton><p class="login-hint">未注册的手机号验证通过后，将自动创建账号。</p>
+          </form></TabsContent>
+        </Tabs>
       </section>
-    </div>
+    </div><footer class="login-footer">教师台账 · 让班级工作井然有序</footer>
   </main>
 </template>

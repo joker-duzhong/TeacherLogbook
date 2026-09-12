@@ -70,13 +70,15 @@ test('scan login survives reload and reopening without storing user or refresh t
 test('phone login restores its current route and logout removes persistent credentials', async ({ page, context }) => {
   const state = await mockAuth(context);
   await phoneLogin(page);
-  await page.getByRole('link', { name: '皮肤', exact: true }).click();
+  await page.getByRole('button', { name: '账号与设置', exact: true }).click();
+  await page.getByRole('menuitem', { name: '界面皮肤', exact: true }).click();
   await expect(page.locator('.theme-options')).toBeVisible();
   await page.reload();
   await expect(page).toHaveURL(/\/workspace\/settings$/);
   await expect(page.locator('.theme-options')).toBeVisible();
   expect(state.profiles).toBe(1);
-  await page.getByRole('button', { name: '退出', exact: true }).click();
+  await page.getByRole('button', { name: '账号与设置', exact: true }).click();
+  await page.getByRole('menuitem', { name: '退出', exact: true }).click();
   await expect(page).toHaveURL(/\/login(?:\?|$)/);
   expect(await page.evaluate(key => localStorage.getItem(key) === null, storageKey)).toBe(true);
   await page.getByRole('tab', { name: '手机号验证码' }).click();

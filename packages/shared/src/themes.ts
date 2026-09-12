@@ -1,7 +1,7 @@
 export interface Theme { id: string; name: string; paper: string; panel: string; ink: string; muted: string; line: string; brand: string; sidebar: string; sidebarInk: string; radius: string; accent: string }
 export const themes: Theme[] = [
   { id: 'mr', name: 'MR 工作室', paper: '#f7f5ee', panel: '#fffefa', ink: '#171717', muted: '#68665e', line: '#171717', brand: '#c73820', sidebar: '#171717', sidebarInk: '#f5f5f5', radius: '0px', accent: '#dfff00' },
-  { id: 'mint', name: '浅薄荷绿', paper: '#f3f1eb', panel: '#ffffff', ink: '#222222', muted: '#666666', line: '#cdd2cb', brand: '#357266', sidebar: '#edf3ed', sidebarInk: '#263a32', radius: '6px', accent: '#eeffed' },
+  { id: 'mint', name: '浅薄荷绿', paper: '#f5f3ee', panel: '#fffefa', ink: '#17222b', muted: '#607078', line: '#d9ddd7', brand: '#34776d', sidebar: '#edf3ed', sidebarInk: '#263a32', radius: '8px', accent: '#e3f1e5' },
   { id: 'ngrok', name: 'ngrok', paper: '#f8f7f3', panel: '#ffffff', ink: '#211b3f', muted: '#686379', line: '#d7d2df', brand: '#9d245a', sidebar: '#211b3f', sidebarInk: '#f8f7f3', radius: '4px', accent: '#fbd9e7' },
   { id: 'apple', name: 'Apple', paper: '#f5f5f7', panel: '#ffffff', ink: '#1d1d1f', muted: '#6e6e73', line: '#d2d2d7', brand: '#0071e3', sidebar: '#fbfbfd', sidebarInk: '#1d1d1f', radius: '8px', accent: '#e8f3ff' },
 ];

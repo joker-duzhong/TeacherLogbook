@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-12 · shadcn-vue Web 全面重构与双端交互优化
+
+- 安装 shadcn-vue、Reka UI 与 Tailwind CSS 4，移除 Web 的 Element Plus；生成并接入按钮、表单、弹窗、抽屉、菜单、表格、标签、搜索选择和通知组件，统一焦点、禁用、加载与错误反馈。
+- 按已确认的纸张暖白、灰绿侧栏与墨色文字方向重建 Web 设计系统，保留四套皮肤标识和本地 Logo；登录、工作台、总览、19 类记录、座位、班级设置及数据管理采用统一组件与视觉层级。
+- PC 支持分组导航搜索、班级检索切换、独立筛选区和表格行操作；移动端使用记录卡片、底部快捷导航、筛选抽屉及单列表单，覆盖 320px 窄屏和横屏导航。
+- 补齐未保存编辑关闭/返回确认、字段错误聚焦、失败保留输入、防重复保存、确认框层级与焦点恢复；修复连续搜索、日期切换和移动导航焦点时序；导入文件或策略变化后使旧预检失效。
+- 保留既有接口和认证流程，按原有测试夹具验证班级操作、19 类记录增改删、座位调整、导入迁移恢复、登录与 Passport 往返；新增 6 项 UI/UX 回归及 PC/手机核心页面截图。
+- 验证：126 项单元测试、45 项完整浏览器测试通过；最后微调后 6 项针对性回归通过；Web 类型检查、生产构建及 Impeccable 检测通过。生产主入口 JS 为 234.87 kB（gzip 83.68 kB），不再出现此前主包超过 500 kB 的提示。
+- 验证边界：浏览器业务测试使用隔离接口夹具及 Edge 触摸模拟，未做微信真机或真实账号写入验收。Web 范围生产依赖审计仍报告 1 项低风险、4 项中风险，无高危/严重项；安装时存在 CLI 间接依赖的 Node engine 提示，详情见交付文档。
+- 完整改动文件清单、组件来源与验证命令见 [Web UI 重构交付记录](docs/web-ui-refactor.md)。
+
+## 2026-09-11 · 教师台账前端 UI/UX 重构第一阶段
+
+- 依据暖灰纸张、浅灰绿侧栏、暖白内容面的参考方向，统一 Web 端色彩层级、字体、圆角、边框、焦点态和内容宽度；薄荷主题同步调整为 `#F5F3EE` / `#EDF3ED` / `#FFFEFA` / `#34776D` 配色。
+- 工作台导航强化分组间距、当前页面左侧标记、顶部操作层级、工具栏容器和空状态；登录卡片补充更清晰的层级与轻量阴影。
+- 记录页增加结果摘要、筛选计数、移动端底部筛选抽屉、移动端学生/记录卡片、空结果恢复入口、错误字段自动聚焦、保存失败留在表单内、删除成功反馈及未保存修改确认。
+- 新增项目设计系统基线 `design-system/teacher-logbook/MASTER.md`，用于后续页面延续同一套 UI/UX 规则。
+- 验证：Web 类型检查通过；126 项 Vitest 测试通过；记录分页搜索、Dashboard 日期竞态、390px/320px 移动端全页面回归通过；Impeccable 检测无告警；生产构建通过并保留既有主包体积提示。
+- 本轮文件：`apps/web/src/styles.css`、`apps/web/src/views/workspace.css`、`apps/web/src/views/business/RecordsView.vue`、`apps/web/src/views/business/RecordFilters.vue`、`apps/web/src/lib/viewport.ts`、`packages/shared/src/themes.ts`、`design-system/teacher-logbook/MASTER.md`、`CHANGELOG.md`。
+
+## 2026-09-11 · 安装前端 UI/UX 设计技能
+
+- 安装官方 Figma 技能：`figma`、`figma-implement-design`、`figma-create-design-system-rules`。
+- 安装官方设计生成技能：`figma-generate-design`、`figma-generate-library`，用于设计探索与组件库构建。
+- 技能安装位置：`C:\\Users\\with_hope\\.codex\\skills`；未写入项目源码、配置、密钥或运行时网络请求。
+
 ## 2026-09-11 · 移动端侧栏关闭与触摸滚动修复
 
 - 排查发现侧栏高度仅使用 100dvh、遮罩定位仅使用 inset，缺少旧 WebView 的兼容处理；触摸实验确认展开侧栏后滑动右侧会滚动背景，屏蔽 inset 支持后右侧空白无法命中遮罩。

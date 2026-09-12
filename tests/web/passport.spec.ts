@@ -125,7 +125,8 @@ for (const production of [false, true]) {
     await page.goForward();
     await expect(page).toHaveURL(origin + '/workspace/classes');
     await page.reload(); expect(state.exchanges).toBe(1);
-    await page.getByRole('button', { name: '退出', exact: true }).click();
+    await page.getByRole('button', { name: '账号与设置', exact: true }).click();
+    await page.getByRole('menuitem', { name: '退出', exact: true }).click();
     await expect(page.getByRole('button', { name: '前往授权中心登录' })).toBeVisible();
     await expect(page.getByLabel('手机号', { exact: true })).toHaveCount(0);
     expect(state.creates).toBe(1);

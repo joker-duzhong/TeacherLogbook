@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import QRCode from 'qrcode';
+import { webThemeVariables } from '../../apps/web/src/lib/theme';
 import { themes } from '../../packages/shared/src/themes';
 
 async function mockScan(page: Page) {
@@ -93,10 +94,11 @@ for (const width of [1440, 320]) {
       await menu.getByRole('button', { name: theme.name, exact: true }).click();
       await expect(page.locator('#login-theme-options')).not.toBeVisible();
       await expect(page.locator('.login-page')).toHaveAttribute('data-theme', theme.id);
-      const colors = await page.locator('.login-page').evaluate(element => ({ background: getComputedStyle(element).backgroundColor, brand: getComputedStyle(element).getPropertyValue('--brand').trim() }));
-      expect(colors.brand).toBe(theme.brand);
+      const colors = await page.locator('.login-page').evaluate(element => ({ background: getComputedStyle(element).backgroundColor, brand: getComputedStyle(element).getPropertyValue('--primary').trim() }));
+      const expectedPrimary = webThemeVariables(theme.id)['--primary'];
+      expect(colors.brand).toBe(expectedPrimary);
       expect(colors.background).not.toBe('rgba(0, 0, 0, 0)');
-      const primaryColor = `rgb(${[1, 3, 5].map(offset => Number.parseInt(theme.brand.slice(offset, offset + 2), 16)).join(', ')})`;
+      const primaryColor = `rgb(${[1, 3, 5].map(offset => Number.parseInt(expectedPrimary.slice(offset, offset + 2), 16)).join(', ')})`;
       await expect(page.getByRole('button', { name: mobile ? '登录工作台' : '刷新二维码', exact: true })).toHaveCSS('background-color', primaryColor);
       if (mobile) {
         await expect(page.locator('.qr-image-area')).toHaveCount(0);

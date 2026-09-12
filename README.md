@@ -17,7 +17,7 @@
 使用 npm workspaces 管理本地共享包，根目录 `package-lock.json` 为唯一安装锁文件。首次成功安装并提交锁文件后，后续可用 `npm ci` 复现依赖。
 
 ```text
-apps/web/                 Vue 3 + Vite + Element Plus
+apps/web/                 Vue 3 + Vite + shadcn-vue + Tailwind CSS 4
 apps/miniapp/             uni-app Vue 3，微信小程序目标
 packages/api-client/      生成类型、请求契约、业务 API
 packages/shared/          业务目录、校验、统计、CSV、皮肤及纯工具
@@ -27,6 +27,14 @@ vanilla-js/               未改动的旧版归档
 ```
 
 两端独立 UI，通过后端共享业务数据。网页端只持久化 access token，业务状态仍驻留内存；小程序保持原有内存登录态。PC 与 uni-app 各自固定 Vue / Vite 版本，不能把小程序依赖统一升级到 PC 版本。
+
+## Web 界面开发
+
+Web 已迁移至 shadcn-vue（Reka UI），生成的组件源码保存在 `apps/web/src/components/ui/`，项目级表单、通知、确认和搜索选择器位于 `apps/web/src/components/`。采用系统字体，不需要在线字体服务。设计规则见 `apps/web/DESIGN.md`。
+
+PC 使用分组导航和表格，760px 以下切换为抽屉、常用底栏、记录卡片与底部筛选。原四种皮肤在 Web 中映射为统一的语义变量；原有登录、接口和路由协议继续使用。
+
+需要添加组件时，在 `apps/web` 内运行 `npx shadcn-vue add <组件名>`。组件生成器与 Tailwind 属于开发依赖；已生成的 Vue 组件随应用构建。自动化测试使用隔离接口，运行 `npm run test:web` 前启动 `npm run dev:web`。
 
 ## 安装与运行
 

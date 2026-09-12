@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from "@/components/AppButton.vue";
 import { computed, onMounted, onUnmounted } from 'vue';
 import QRCode from 'qrcode';
 import type { LoginResult } from '@teacher-logbook/api-client';
@@ -39,7 +40,7 @@ onUnmounted(() => {
       <div v-if="masked" class="qr-overlay" role="status" aria-live="polite" aria-atomic="true">
         <p class="qr-overlay-title" :class="{ 'is-pending': state.phase === 'PENDING' }">{{ title }}</p>
         <p v-if="state.error" class="qr-overlay-error">{{ state.error }}</p>
-        <el-button v-if="canRefresh" type="primary" native-type="button" @click="scan.start">刷新二维码</el-button>
+        <AppButton v-if="canRefresh" variant="default" type="button" @click="scan.start">刷新二维码</AppButton>
       </div>
     </div>
     <p class="qr-login-hint">使用微信扫码登录</p>
